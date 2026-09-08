@@ -95,15 +95,40 @@ The ADRV9361-Z7035 has very low TX power in the 5 GHz band, so keep devices clos
 
 ## 5. Give clients internet access (optional)
 
-The board itself has no internet uplink, so route client traffic through your PC. On the PC:
+The board has no internet uplink, so route client traffic through your PC.
+
+On the PC, find the internet interface and the interface connected to the board:
 
 ```bash
-sudo sysctl -w net.ipv4.ip_forward=1
-sudo iptables -t nat -A POSTROUTING -o <internet_nic> -j MASQUERADE
-sudo ip route add 192.168.13.0/24 via 192.168.10.122 dev <board_nic>
+ip route show default
+ip -br address
 ```
 
-where `<board_nic>` is the PC interface wired to the board and `<internet_nic>` is the PC's uplink. Uncomment `net.ipv4.ip_forward=1` in `/etc/sysctl.conf` to make forwarding persistent.
+The internet interface appears after `dev` in the default route. The board-facing interface has the address `192.168.10.1`. Set the example names below to match your PC, then run the setup once:
+
+```bash
+BOARD_NIC=eth0
+INTERNET_NIC=wlp0s20f3
+
+sudo sysctl -w net.ipv4.ip_forward=1
+sudo ip route replace 192.168.13.0/24 via 192.168.10.122 dev "$BOARD_NIC"
+sudo iptables -I FORWARD 1 -i "$BOARD_NIC" -o "$INTERNET_NIC" -s 192.168.13.0/24 -j ACCEPT
+sudo iptables -I FORWARD 1 -i "$INTERNET_NIC" -o "$BOARD_NIC" -d 192.168.13.0/24 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+sudo iptables -t nat -A POSTROUTING -s 192.168.13.0/24 -o "$INTERNET_NIC" -j MASQUERADE
+```
+
+The two `FORWARD` rules allow client requests and their replies. `MASQUERADE` translates client addresses to the PC's internet-facing address.
+
+From a connected Linux client, test each stage in order:
+
+```bash
+ping -c 3 192.168.13.1    # client to openwifi board
+ping -c 3 192.168.10.1    # board forwarding to PC
+ping -c 3 1.1.1.1         # PC forwarding and NAT
+ping -c 3 example.com     # DNS
+```
+
+IP forwarding resets when the PC reboots. The route and firewall rules may also disappear when you reload the PC's network or firewall configuration. For a permanent setup, enable forwarding through `sysctl.d` and configure the route and rules through the PC's network and firewall managers.
 
 ## 6. What just happened?
 
