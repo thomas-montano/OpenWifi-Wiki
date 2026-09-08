@@ -1,6 +1,6 @@
 # Software Development Workflow
 
-This page covers the software side of openwifi development: rebuilding and deploying the driver, `sdrctl`, and the other `user_space/` tools. Building the FPGA bitstream and turning it into a loadable image are on the [FPGA Development](FPGA-Development.md) page. This page picks up at getting things onto the board.
+This page covers the software side of openwifi development: rebuilding and deploying the driver, `sdrctl`, and the other `user_space/` tools. Building the FPGA bitstream and turning it into a loadable image are on the [FPGA Development](FPGA-Development.md) page. This page starts where the FPGA pages stop: getting built software onto the board.
 
 The prebuilt SD image may be older than the current repo, so **copy the repo's `user_space/` files onto the board** before doing serious work, and rebuild the driver against the matching kernel.
 
@@ -21,7 +21,7 @@ For the exact toolchain, kernel, and image versions these builds expect, see [Ve
 
 ## Quick reference: from code change to running board
 
-Find the row that matches what you changed and follow its link to the full instructions. The commands assume the usual setup: sources on your PC, the board reachable at `192.168.10.122`, and the [environment variables](#environment-setup) set.
+Find the row that matches what you changed and follow its link to the full instructions. The commands assume the usual setup: sources on your PC, the board reachable at `192.168.10.122` (the default address from [Getting Started](Getting-Started.md)), and the [environment variables](#environment-setup) set.
 
 | You changed | Rebuild & deploy | Take effect |
 | --- | --- | --- |
@@ -81,7 +81,7 @@ For print-style debugging, add `printk` calls in the driver and watch them live 
 4. On the board, `./wgd.sh` loads the new driver (and reloads the FPGA image if `system_top.bit.bin` is present in the same directory).
 
 !!! warning "Symbol/version errors on load mean a kernel mismatch"
-    The kernel in the SD image is usually older than the one your driver was built against. Fix it by putting the freshly built kernel image into the `BOOT` partition: `adi-linux/arch/arm/boot/uImage` (32-bit) or `adi-linux-64/arch/arm64/boot/Image` (64-bit).
+    The kernel in the SD image is usually older than the one your driver was built against. Fix it by putting the freshly built kernel image into the `BOOT` partition: `adi-linux/arch/arm/boot/uImage` (32-bit) or `adi-linux-64/arch/arm64/boot/Image` (64-bit). The full procedure is in [Updating a board to a newly built kernel](Boot-Kernel-Device-Tree.md#updating-a-board-to-a-newly-built-kernel).
 
 ### Conditional compilation
 
@@ -92,6 +92,14 @@ Passing extra arguments to `make_all.sh` turns them into `#define` macros in `pr
 `wgd.sh` can reload the driver and/or FPGA live and switch between different builds with no reboot and no power cycle. Keep your on-board files current with `user_space/` to use it.
 
 **Driver only.** Ensure `system_top.bit.bin` is *not* in the directory. `wgd.sh` then loads just the `.ko` files.
+
+!!! note "Forcing or skipping the FPGA reload"
+    When `system_top.bit.bin` *is* present, whether `wgd.sh` reprograms the FPGA depends on the system. On Kuiper and OpenWrt it reloads the FPGA image, the historical default. On a Buildroot image it keeps the bitstream U-Boot already loaded when the RF chain is up, to avoid a redundant reprogram. Override either default explicitly with an environment variable:
+
+    ```bash
+    OPENWIFI_RELOAD_FPGA=0 ./wgd.sh   # never reprogram the FPGA, load only the driver
+    OPENWIFI_RELOAD_FPGA=1 ./wgd.sh   # force an FPGA reprogram from system_top.bit.bin
+    ```
 
 **Driver + FPGA.** Generate the reloadable bitstream and put it beside the driver files (the `.xsa` input comes from the FPGA build, see [FPGA Development](FPGA-Development.md#updating-the-fpga-image-on-a-running-board)):
 
@@ -117,13 +125,14 @@ This makes it easy to keep, share, and switch between variants. To build a varia
 ./wgd.sh $TARGET_DIR
 ```
 
-**Full `wgd.sh` usage** (also shown by `./wgd.sh -h`):
+**Full `wgd.sh` usage** (`wgd.sh` prints this at the start of every run, and there is no dedicated help flag, so `./wgd.sh -h` prints the usage and then fails because it treats `-h` as a missing directory):
 
 - no argument: load the driver `.ko` files and the FPGA image (if `system_top.bit.bin` exists) from the current directory, with `test_mode=0`
 - a numeric first argument is assigned to `test_mode` (loads everything from the current directory)
 - `remote` downloads the files and then loads them. An optional second argument names the target directory, an optional third sets `test_mode`
 - any other first argument that is not a `.tar.gz` file is treated as a directory to load from. An optional second argument sets `test_mode`
 - a `.tar.gz` file is unpacked and loaded from the unpacked directory. An optional second argument sets `test_mode`
+- `OPENWIFI_RELOAD_FPGA=0/1` (environment variable) explicitly skips or forces the FPGA reprogram, overriding the per-system default described above
 
 ### test_mode
 
@@ -144,16 +153,18 @@ scp `find ./ -name \*` root@192.168.10.122:openwifi/sdrctl_src/
 cd ~/openwifi/sdrctl_src/ && make clean && make && cp sdrctl ../ && cd ..
 ```
 
+A successful build finishes without errors, and the new binary lands at `~/openwifi/sdrctl`.
+
 ## Bulk update helpers
 
 For larger updates (kernel, modules, device tree, rootfs) there are paired host/board scripts:
 
 - **Kernel + modules + device tree:** on the host, `prepare_kernel.sh`, `boot_bin_gen.sh`, and `transfer_kernel_image_module_to_board.sh`. On the board, `populate_kernel_image_module_reboot.sh` (run it again after the first reboot if the kernel *version* changed, so symlinks point at the new version). The whole flow, with the verification steps that get you back to a working `sdr0`, is written out in [Updating a board to a newly built kernel](Boot-Kernel-Device-Tree.md#updating-a-board-to-a-newly-built-kernel).
 - **Driver + user space:** on the host, `make_all.sh` and `transfer_driver_userspace_to_board.sh`. On the board, `populate_driver_userspace.sh`.
-- **Over FTP:** set up an anonymous FTP server on the PC rooted at your `openwifi` directory, then on the board `./sdcard_boot_update.sh $BOARD_NAME` (pulls `uImage`, `BOOT.BIN`, `devicetree.dtb` into the boot partition, then power-cycle) and `./wgd.sh remote` (pulls driver files and brings up `sdr0`).
+- **Over FTP (optional):** set up an anonymous FTP server on the PC rooted at your `openwifi` directory, then on the board `./sdcard_boot_update.sh $BOARD_NAME` (pulls `uImage`, `BOOT.BIN`, `devicetree.dtb` into the boot partition, then power-cycle) and `./wgd.sh remote` (pulls driver files and brings up `sdr0`). Anonymous FTP has no authentication, so use it on trusted lab networks only.
 - **rootfs as a disk:** on the PC, *File manager → Connect to Server → `sftp://root@192.168.10.122/root`* (password `openwifi`).
-- Refreshing the ADI rootfs tools is also worthwhile: on the board, clone `linux_image_ADI-scripts`, `apt update`, then run `adi_update_tools.sh` (see the [ADI Kuiper update guide](https://wiki.analog.com/resources/tools-software/linux-software/kuiper-linux/update)).
+- Refreshing the ADI rootfs tools is also worthwhile: on the board, clone [`linux_image_ADI-scripts`](https://github.com/analogdevicesinc/linux_image_ADI-scripts), `apt update`, then run `adi_update_tools.sh` (see the [ADI Kuiper update guide](https://wiki.analog.com/resources/tools-software/linux-software/kuiper-linux/update)).
 
 ## Building a full SD image from scratch
 
-Two base operating systems are supported, **ADI Kuiper** (Debian/Ubuntu-like) and **OpenWrt** (router-style with LuCI). The full step-by-step for both (flashing the base image, the rootfs edits, `update_sdcard.sh`, and the OpenWrt Docker build) is on the dedicated [Building SD Images](Building-SD-Images.md) page. Kuiper builds need Vivado 2022.2 (with Vitis) and the `flex bison libssl-dev device-tree-compiler u-boot-tools` packages. The OpenWrt build only needs Docker.
+Three base operating systems are supported, **ADI Kuiper** (Debian/Ubuntu-like), **OpenWrt** (router-style with LuCI), and **Buildroot** (a small, fast-booting deployment image for the ANTSDR boards). The full step-by-step for all three (flashing or writing the image, the rootfs edits, `update_sdcard.sh`, the OpenWrt Docker build, and the Buildroot build) is on the dedicated [Building SD Images](Building-SD-Images.md) page. Kuiper builds need Vivado 2022.2 (with Vitis) and the `flex bison libssl-dev device-tree-compiler u-boot-tools` packages. The OpenWrt build only needs Docker, and the Buildroot build needs only its host packages plus a prebuilt `system_top.xsa`.

@@ -97,7 +97,7 @@ The fields run left to right, butted up against each other:
 |---|---|---|---|
 | 1 | **Action** | `w` write, `r` read, `g` get | |
 | 2 | **Register type** | `h` hardware, `s` software | Required for `w` and `r`. Which one you pick makes no difference (see below). |
-| 3 | **Register index** | `0`–`31`, decimal | The parser reads digits until it hits the radix letter. |
+| 3 | **Register index** | `0` to `31`, decimal | The parser reads digits until it hits the radix letter. |
 | 4 | **Radix** | `d` decimal, `h` hex | Write only: how to read the value that follows. |
 | 5 | **Value** | | Write only. |
 
@@ -169,7 +169,7 @@ These are the `side_ch` core's `slv_regN` in `side_ch.v`. Several registers **me
 
 | reg | Mode | Meaning |
 |---|---|---|
-| 0 | both | Reset, per bit, write 1 to hold: bit0 the DMA-to-PS stream, bit2 the capture FSM. (bit1 is an unused S-AXIS reset.) |
+| 0 | both | Reset, per bit, write 1 to hold: bit0 the DMA-to-PS stream, bit2 the capture FSM. (bit1 is an unused reset of the AXI-Stream slave interface (S-AXIS).) |
 | 1 | both | Config. bits1-0 start mode: **1 = normal** (transfer starts when reg 2 is written), 0 = S-AXIS loopback, 2 = external trigger, 3 = off. bit4 endless mode. bit12 FC match, bit13 addr1 match, bit14 addr2 match. |
 | 2 | both | Symbol count for the next DMA transfer. **Writing it starts the transfer**: that's what "start mode 1" means. `side_ch.ko` writes it on every `g` poll, so you never touch it. |
 | 3 | IQ | bit0 enables IQ capture. bits5-4 pick what each sample carries: `0` = antenna 0 IQ + AGC gain + status, `1` = antenna 0 **and** antenna 1 IQ (dual-antenna capture), `2` = antenna 0 IQ + AGC gain + a status word with `tx_control_state` and Frame Control instead. |
@@ -268,7 +268,7 @@ The counters are 16 bits wide and wrap silently, so clear the ones you use at th
 ./side_ch_ctl wh31d0         # write any value to clear it
 ```
 
-Registers 30 and 31 read together give you a per-peer PER: 31 counts the good ones, 30 counts every decode attempt. For a proper `rssi_above_th` threshold, take the value from `auto_lbt_th` in `openwifi_rf_rx_update_after_tuning()` in `sdr.c`. The `openofdm_rx` watchdog has a separate set of counters reached through `sdrctl` instead. Both are covered on the [Research Features page](Research-Features.md#fpga-event-counters).
+Registers 30 and 31 read together give you a per-peer PER: 31 counts the good ones, 30 counts every decode attempt. For a proper `rssi_above_th` threshold, take the value from `auto_lbt_th` in `openwifi_rf_rx_update_after_tuning()` in [`sdr.c`](https://github.com/open-sdr/openwifi/blob/master/driver/sdr.c). The `openofdm_rx` watchdog has a separate set of counters reached through `sdrctl` instead. Both are covered on the [Research Features page](Research-Features.md#fpga-event-counters).
 
 ---
 
@@ -289,7 +289,7 @@ Reloading `side_ch.ko` does not return the core to a clean state. `dev_probe()` 
 - A leftover `wh5h4` from a loopback test still taps `tx_intf` after the reload, so the IQ quick start silently captures your own transmit instead of the air. Register 5 needs no enabling bit, so nothing else hides the mistake.
 - Going from IQ mode back to CSI mode by reloading with no `iq_len_init` leaves register 3 bit 0 **still set**, because the driver only writes that register when `iq_len_init > 0`. The FPGA stays in IQ mode while the driver frames for CSI. (Also flagged under [Unverified](#unverified-a-suspected-upstream-bug).)
 
-Write the stale registers back by hand (`wh5d0`, `wh3d0`), or reload the bitstream with `./wgd.sh` for a guaranteed clean state.
+Write the stale registers back by hand (`wh5d0`, `wh3d0`), or reload the bitstream with `./wgd.sh` for a guaranteed clean state. On a Buildroot image plain `./wgd.sh` keeps the FPGA that U-Boot loaded, so force the reprogram with `OPENWIFI_RELOAD_FPGA=1 ./wgd.sh`.
 
 ### Nothing reaches the PC
 

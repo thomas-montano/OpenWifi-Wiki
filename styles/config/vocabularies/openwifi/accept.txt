@@ -19,6 +19,7 @@ radiotap
 Xilinx('s)?
 Vivado
 Vitis
+Buildroot
 Verilog
 Tcl
 XSim
@@ -129,6 +130,7 @@ reloadable
 retrans
 rootfs
 schedulable
+subcommands?
 subframes?
 substrings?
 sysfs
@@ -164,3 +166,8 @@ tx_intf
 Gb
 Fc
 ns
+backports
+minicom
+kbps
+prepended
+rsyslog

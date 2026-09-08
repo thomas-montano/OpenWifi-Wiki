@@ -77,7 +77,7 @@ There is not one "openwifi repo." There are four, each with its own job and tool
   <text x="346" y="381" text-anchor="middle" font-size="12" fill="currentColor" fill-opacity="0.85">build scripts pull the prebuilt bitstreams</text>
   <text x="590" y="427" text-anchor="middle" font-size="12" fill="currentColor" fill-opacity="0.85">vendored as a git submodule → ip/openofdm_rx</text>
 </svg>
-<figcaption><em>The four openwifi repositories and how they connect. The two you clone day-to-day are <strong>openwifi</strong> and <strong>openwifi-hw</strong>. The other two are consumed automatically.</em></figcaption>
+<figcaption><em>The four openwifi repositories and how they connect. If you develop on openwifi, the two you clone day-to-day are <strong>openwifi</strong> and <strong>openwifi-hw</strong>. The other two are consumed automatically.</em></figcaption>
 </figure>
 
 | Repository | What it holds | When you touch it |
@@ -100,7 +100,7 @@ There is not one "openwifi repo." There are four, each with its own job and tool
 
 ## Versions this wiki targets
 
-openwifi pins several toolchains and upstream projects, and they intentionally don't all share a version number. A 2022-era FPGA toolchain paired with a current kernel is normal here. If a build script or a repo README states a version different from the table below, trust the repo. Treat this table as a snapshot from the last reconciliation with the repos (**August 7, 2026**). Bumping it when they move is a welcome contribution.
+openwifi pins several toolchains and upstream projects, and they intentionally don't all share a version number. A 2022-era FPGA toolchain paired with a current kernel is normal here. If a build script or a repo README states a version different from the table below, trust the repo. Treat this table as a snapshot from the last reconciliation with the repos (**September 7, 2026**). Bumping it when they move is a welcome contribution.
 
 | Component | Target version | Set / pinned in | Notes |
 |---|---|---|---|
@@ -110,6 +110,7 @@ openwifi pins several toolchains and upstream projects, and they intentionally d
 | `openofdm` receiver (submodule) | branch **`dot11zynq`** (HLS variant **`dot11zynq_hls`**) | `get_ip_openofdm_rx.sh` | Backs the `openofdm_rx` core. |
 | ADI Kuiper base image | **2023-12-13 release** (`image_2023-12-13-ADI-Kuiper-full.zip`, tagged `2022_r2`) | flashed manually | Only the starting rootfs. You build a current kernel on top. See [Building SD Images](Building-SD-Images.md#adi-kuiper-build-from-scratch). |
 | OpenWrt (alternative to Kuiper) | branch **`openwrt-openwifi_v25.12.5`** = OpenWrt **25.12.5**, Linux **6.12**, mac80211 **6.18** | `openwrt-openwifi` repo | Docker-only build, no Vivado. See [Building SD Images](Building-SD-Images.md#openwrt). |
+| Buildroot (alternative to Kuiper) | Buildroot **`2025.02.11`**, Linux **6.12**, U-Boot **`xlnx_rebase_v2024.01_2024.2`** | `buildroot` submodule + `buildroot-external/` | Small, fast-booting deployment image for `antsdr_e200`, `antsdr`, `e310v2`. No Vivado, reuses a prebuilt XSA. See [Building SD Images](Building-SD-Images.md#buildroot). |
 | Xilinx Viterbi decoder | **evaluation license** | Vivado IP catalog | The eval license halts a running receiver after ~2 hours. A paid license removes the limit. |
 | Build-host OS | **Ubuntu 18 / 20 / 22 LTS** | not pinned | Ubuntu 24 needs `libtinfo5` installed manually (see [Environment Setup](Development-Environment-Setup.md#host-os-and-packages)). |
 
