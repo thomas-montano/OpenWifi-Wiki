@@ -504,7 +504,11 @@ def render_prompt(repo_result, context_path, dry_run=False):
            the pull request. It fails on broken internal links and missing
            anchors.
 
-        8. Commit using a Conventional Commits message, as described in the git
+        8. Run `vale docs/ includes/` on the pages you touched. If it reports any
+           errors, fix them and run vale again to confirm they are gone before you
+           open the pull request. Warnings and suggestions are not a gate.
+
+        9. Commit using a Conventional Commits message, as described in the git
            conventions section of AGENTS.md. Almost always the type is `docs`.
            The subject is imperative mood, lowercase after the colon, no trailing
            period, and 72 characters or fewer. For example:
@@ -515,17 +519,17 @@ def render_prompt(repo_result, context_path, dry_run=False):
            characters. The body must be accurate. Do not claim the previous text
            was wrong unless you confirmed that in step 4.
 
-        9. Push the branch and open a pull request against the `master` branch of
-           this wiki repository using `gh pr create`. Title the pull request in
-           the same Conventional Commits format as the commit subject, because it
-           becomes the squash-merge subject. In the description, link back to each
-           source commit and pull request you acted on, and explain what changed
-           upstream and why you edited the pages you edited.
+        10. Push the branch and open a pull request against the `master` branch of
+            this wiki repository using `gh pr create`. Title the pull request in
+            the same Conventional Commits format as the commit subject, because it
+            becomes the squash-merge subject. In the description, link back to each
+            source commit and pull request you acted on, and explain what changed
+            upstream and why you edited the pages you edited.
 
-           State plainly whether each edit is a correction or an alignment, so
-           the reviewer knows how carefully to look. If you were unable to verify
-           something, say which part is unverified rather than leaving it out.
-           Do not merge the pull request. Leave it for a human.
+            State plainly whether each edit is a correction or an alignment, so
+            the reviewer knows how carefully to look. If you were unable to verify
+            something, say which part is unverified rather than leaving it out.
+            Do not merge the pull request. Leave it for a human.
         %s
         """)
 
