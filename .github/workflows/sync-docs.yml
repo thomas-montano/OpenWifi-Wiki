@@ -127,6 +127,9 @@ jobs:
           set -uo pipefail
           PLAN="${{ steps.collect.outputs.plan }}"
           FAILED=0
+          # Repos whose session did not complete successfully. Read by the next
+          # step, which must not mark these repos as synced.
+          : > "$RUNNER_TEMP/failed_repos.txt"
 
           while read -r prompt_file repo; do
             echo "::group::Sync session for $repo"
@@ -144,7 +147,7 @@ jobs:
               --max-turns 40 \
               --permission-mode acceptEdits \
               --allowedTools "Read,Write,Edit,Glob,Grep,TodoWrite,Bash(git:*),Bash(gh pr create:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(mkdocs:*),Bash(pip:*)" \
-              --output-format text || { echo "session for $repo failed"; FAILED=1; }
+              --output-format text || { echo "session for $repo failed"; echo "$repo" >> "$RUNNER_TEMP/failed_repos.txt"; FAILED=1; }
 
             echo "::endgroup::"
           done < <(jq -r '.runs[] | "\(.prompt_file) \(.repo)"' "$PLAN")
@@ -155,8 +158,12 @@ jobs:
           exit $FAILED
 
       - name: Record the processed commits
-        # Runs even if a session failed, so a single bad commit cannot wedge the
-        # pipeline into reprocessing the same range forever. Skipped on a dry run.
+        # Runs even if a session failed, so one repo's failure cannot wedge the
+        # whole pipeline. A repo whose session actually failed keeps its
+        # previous state entry instead of being advanced, so the commits it was
+        # supposed to process stay pending and get retried on the next run
+        # rather than being marked synced without ever producing a pull
+        # request. Skipped on a dry run.
         if: always() && inputs.dry_run != true && inputs.dry_run_latest != true
         run: |
           set -euo pipefail
@@ -164,7 +171,21 @@ jobs:
           [ -f "$PLAN" ] || exit 0
 
           git checkout -f master
-          jq '.next_state' "$PLAN" > .github/sync-state.json
+
+          FAILED_REPOS_FILE="$RUNNER_TEMP/failed_repos.txt"
+          [ -f "$FAILED_REPOS_FILE" ] || : > "$FAILED_REPOS_FILE"
+          FAILED_JSON=$(jq -R -s -c 'split("\n") | map(select(length > 0))' "$FAILED_REPOS_FILE")
+
+          # Start from the proposed next state, then for any repo whose session
+          # failed, overwrite its entry back to what is currently committed, so
+          # that repo is reprocessed from the same starting point next time.
+          jq --argjson failed "$FAILED_JSON" --slurpfile prev .github/sync-state.json '
+            .next_state
+            | .repos as $next_repos
+            | .repos = reduce $failed[] as $r
+                ($next_repos; .[$r] = $prev[0].repos[$r])
+          ' "$PLAN" > "$RUNNER_TEMP/sync-state.json"
+          mv "$RUNNER_TEMP/sync-state.json" .github/sync-state.json
 
           if git diff --quiet -- .github/sync-state.json; then
             echo "State unchanged, nothing to commit."
