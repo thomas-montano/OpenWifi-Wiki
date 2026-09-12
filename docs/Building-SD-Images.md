@@ -205,7 +205,8 @@ OpenWrt packages openwifi as a kernel module and gives you the LuCI web UI. The 
 |---|---|---|
 | `zc706_fmcs2`, `zed_fmcs2`, `adrv9364z7020`, `adrv9361z7035` | ✅ | ✅ |
 | `zcu102_fmcs2` | ✅ | ✅ ⚠️ (fails on some boards, see [Troubleshooting](Troubleshooting.md#no-uart-output-on-zcu102-under-openwrt)) |
-| `zc702_fmcs2`, `antsdr`, `e310v2`, `antsdr_e200`, `sdrpi`, `neptunesdr` | ✅ | (untested) |
+| `antsdr`, `antsdr_e200` | ✅ | ✅ (antsdr tested by community) |
+| `zc702_fmcs2`, `e310v2`, `sdrpi`, `neptunesdr` | ✅ | (untested) |
 
 ### OpenWrt quick start (prebuilt image)
 
