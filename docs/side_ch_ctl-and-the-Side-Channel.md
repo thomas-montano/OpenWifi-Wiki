@@ -23,34 +23,39 @@ Unlike every other openwifi FPGA module, `side_ch` is **not** driven by `sdr.ko`
 
 ## Building
 
-Prebuilt SD images already ship both, with `side_ch_ctl` on `$PATH` (see [Building SD Images](Building-SD-Images.md)). The SD image can be older than your source tree. When you update the board, copy the current `side_ch_ctl` source from your host and rebuild it on the board:
+Prebuilt SD images already ship both `side_ch.ko` and `side_ch_ctl`, with `side_ch_ctl` on `$PATH` (see [Building SD Images](Building-SD-Images.md)). The SD image can be older than your source tree, so after updating a board, rebuild both pieces from the current source rather than trusting what shipped on the image.
+
+`side_ch_ctl` is a user-space tool, so it compiles directly on the board. From your host's `openwifi` checkout:
 
 ```bash
-# On your host, copy the current source to the board:
-scp -r "$OPENWIFI_DIR/user_space/side_ch_ctl_src" root@192.168.10.122:/root/openwifi/
+# on your host, copy the current source to the board:
+scp -r openwifi/user_space/side_ch_ctl_src root@192.168.10.122:/root/openwifi/
 
-# On the board, compile it and replace the binary used by the recipes:
+# on the board, compile it and replace the binary the recipes call:
 cd /root/openwifi/side_ch_ctl_src
 gcc -o side_ch_ctl side_ch_ctl.c
 cp side_ch_ctl /root/openwifi/side_ch_ctl
-cd /root/openwifi
 ```
 
-The rebuilt tool works with the `side_ch.ko` already on the board when its driver source, kernel, FPGA image, and device tree have not changed. Rebuild and deploy `side_ch.ko` too after changing `driver/side_ch/`, updating the board kernel, or loading an FPGA image with a changed `side_ch` core:
+That is enough on its own when `side_ch.ko`'s driver source, the board kernel, the FPGA image, and the device tree have not changed. Rebuild and reload `side_ch.ko` too when any of those changed:
 
 ```bash
-# On your host, run this from driver/side_ch. The script derives OPENWIFI_DIR from pwd:
-cd "$OPENWIFI_DIR/driver/side_ch"
-./make_driver.sh "$XILINX_DIR" "$ARCH_BIT"    # ARCH_BIT: 32 or 64
+# on your host (needs the adi-linux kernel source from
+# prepare_kernel.sh, see Rebuilding the driver on the
+# Software Development Workflow page):
+cd openwifi/driver/side_ch
+./make_driver.sh $XILINX_DIR $ARCH_BIT   # ARCH_BIT: 32 or 64
 scp side_ch.ko root@192.168.10.122:/root/openwifi/
 
-# On the board, reload the replacement module:
+# on the board, reload the replacement module:
 cd /root/openwifi
 rmmod side_ch
 insmod ./side_ch.ko
 ```
 
-Use the address assigned to your board in place of `192.168.10.122`. `side_ch.ko` must match the board's running kernel and the loaded FPGA design. Do not reload the module while `side_ch_ctl g` is running.
+`make_driver.sh` must run from `openwifi/driver/side_ch`, exactly two levels below your checkout root, because it locates the rest of the checkout relative to its own working directory. Running it from anywhere else fails.
+
+Replace `192.168.10.122` with your board's address (see [Getting Started](Getting-Started.md) for the default). `side_ch.ko` must match the board's running kernel and the loaded FPGA design. Do not reload the module while `side_ch_ctl g` is running.
 
 ---
 
