@@ -10,23 +10,7 @@ CSI and IQ capture both ride the same **side channel** infrastructure: the FPGA 
 
 *The side-channel data path: the FPGA `side_ch` core captures data and DMAs it to the board's processor, and `side_ch_ctl` forwards it over UDP (port 4000) to a display/analysis script on your PC.*
 
-Two ways to build the side-channel pieces:
-
-```bash
-# side_ch.ko (on host, run from $OPENWIFI_DIR/driver/side_ch):
-./make_driver.sh $XILINX_DIR $ARCH_BIT   # ARCH_BIT: 32 or 64. The script derives OPENWIFI_DIR from its own location
-# side_ch_ctl (compile ON the board):
-gcc -o side_ch_ctl side_ch_ctl.c
-```
-
-`side_ch_ctl` uses a compact command syntax you'll see throughout this page:
-
-- `./side_ch_ctl whXhY`: **w**rite register **X** with **h**ex value **Y**
-- `./side_ch_ctl whXdY`: write register X with **d**ecimal value Y
-- `./side_ch_ctl rhX`: read register X
-- `./side_ch_ctl g` or `gN`: start capturing. `g` polls every 100 ms, `gN` every N ms
-
-That's enough for the recipes on this page. For the rest of the tool, the module parameters, the full `side_ch` register map, all 32 trigger conditions, and the common pitfalls, see [side_ch_ctl and the Side Channel](side_ch_ctl-and-the-Side-Channel.md).
+Before using these recipes on a board updated beyond the default SD image, follow [Building](side_ch_ctl-and-the-Side-Channel.md#building) to rebuild `side_ch_ctl` and, when needed, `side_ch.ko`. The [side_ch_ctl and the Side Channel](side_ch_ctl-and-the-Side-Channel.md) page is the reference for its command syntax, module parameters, register map, trigger conditions, and capture troubleshooting.
 
 Everything below works not only in monitor mode but also alongside live AP/client/ad-hoc operation. Bring the link up first, then start the side channel.
 
@@ -100,14 +84,13 @@ openwifi's baseband can receive its *own* transmit signal, so with a TX and an R
 
 ![Wi-Fi CSI radar concept: directional TX/RX antennas sensing a target](assets/img/openwifi-radar.jpg)
 
-Unlike the other recipes on this page, this one runs from the reloadable driver+FPGA package (`drv_and_fpga.tar.gz`, unpacked into `drv_and_fpga/`) rather than the preinstalled files under `/root/openwifi` (see [Reloading driver and FPGA without rebooting](Software-Development-Workflow.md#reloading-driver-and-fpga-without-rebooting)).
+Unlike the other recipes on this page, this one runs from the reloadable driver+FPGA package (`drv_and_fpga.tar.gz`, unpacked into `drv_and_fpga/`) rather than the preinstalled files under `/root/openwifi` (see [Reloading driver and FPGA without rebooting](Software-Development-Workflow.md#reloading-driver-and-fpga-without-rebooting)). Rebuild `side_ch_ctl` first by following [Building](side_ch_ctl-and-the-Side-Channel.md#building).
 
 The recipe: bring up the driver+FPGA package, monitor a channel, restrict CSI to your own injector's source MAC, **unmute self-reception**, then inject a stream of packets to sound the channel:
 
 ```bash
 # on the board, after loading drv_and_fpga.tar.gz and monitoring channel 1:
 insmod ./drv_and_fpga/side_ch.ko
-gcc -o side_ch_ctl side_ch_ctl.c
 ./side_ch_ctl wh1h4001
 ./side_ch_ctl wh7h4433225a          # only CSI from XX:XX:44:33:22:5a (our injector)
 ./sdrctl dev sdr0 set reg xpu 1 1   # UNMUTE baseband self-receive
