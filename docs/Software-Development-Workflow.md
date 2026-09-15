@@ -31,7 +31,7 @@ Find the row that matches what you changed and follow its link to the full instr
 | **`inject_80211` / `analyze_80211`** (`user_space/inject_80211/`) | `scp` the source to the board, then **on the board**: `make` | Run it ([usage](Operating-Modes.md#packet-injection-and-fuzzing)) |
 | **Helper scripts** (`user_space/*.sh`, `*.py`) | Nothing to compile. Copy them to the board with `scp`. The Python display scripts (`side_info_display.py`, `iq_capture.py`, and others) run on the PC instead | Run them |
 | **FPGA Verilog / IP cores** | On the PC: rebuild the bitstream ([FPGA Development](FPGA-Development.md)), then `boot_bin_gen.sh` and `scp system_top.bit.bin` to the board | `./wgd.sh`, no reboot needed ([details](FPGA-Development.md#updating-the-fpga-image-on-a-running-board)) |
-| **Kernel config or device tree** | Rebuild on the PC, then transfer and populate on the board. Full step-by-step in [Updating a board to a newly built kernel](Boot-Kernel-Device-Tree.md#updating-a-board-to-a-newly-built-kernel), short form under [bulk helpers](#bulk-update-helpers) | Reboot. A kernel **version** change also needs the driver rebuilt and the populate script run twice |
+| **Kernel config or device tree** | Rebuild on the PC, then transfer and populate on the board. Full step-by-step in [Updating a board to a newly built kernel](Boot-Kernel-Device-Tree.md#updating-a-board-to-a-newly-built-kernel), short form under [bulk helpers](#bulk-update-helpers) | Reboot. A kernel **version** change also needs the driver rebuilt and the populate script run twice, and `sdrctl`/`side_ch_ctl` rebuilt to avoid [crashes from the mismatch](Troubleshooting.md#tool-crashes) |
 
 ### The driver iteration loop
 

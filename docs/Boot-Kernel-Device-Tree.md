@@ -273,6 +273,9 @@ ifconfig sdr0 up
 
 Use `ifconfig -a` rather than plain `ifconfig`, because `wgd.sh` leaves the interface down, so it does not show in the short listing. `ip link` works as well if `net-tools` is not installed. Once `ifconfig sdr0 up` succeeds the board is back to a normal openwifi state and you can continue with [Getting Started](Getting-Started.md) or [Operating Modes](Operating-Modes.md).
 
+!!! tip "Rebuild `sdrctl` and `side_ch_ctl` too"
+    A new kernel is a common way for these to end up out of sync with what they talk to, which can show up as a segmentation fault rather than a clean error ([details](Troubleshooting.md#tool-crashes)). Rebuild both on the board while you are here: [Rebuilding sdrctl](Software-Development-Workflow.md#rebuilding-sdrctl) and [Building side_ch_ctl](side_ch_ctl-and-the-Side-Channel.md#building).
+
 #### If `sdr0` does not appear
 
 Read `dmesg | tail -40` right after `./wgd.sh`. The message shows you which step above did not take:
