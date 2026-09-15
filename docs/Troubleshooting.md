@@ -145,6 +145,12 @@ ForwardToWall=no
 
 `lightdm` has a memory leak. If you don't need the desktop, disable it: `sudo systemctl disable --now lightdm`.
 
+## Tool crashes
+
+### `sdrctl` or `side_ch_ctl` segfaults after another update
+
+Both are user-space binaries that stay on the board until you rebuild them, so they can fall out of sync with a driver, kernel, or FPGA update you made afterward. The mismatch can show up as a segmentation fault instead of a clean error, because the tool and the kernel module agree on the layout of the commands passed between them, and that layout is exactly what changes across updates. If a tool that used to work starts crashing with a segmentation fault after you update anything else, rebuild it on the board from your current source tree: [Rebuilding sdrctl](Software-Development-Workflow.md#rebuilding-sdrctl) or [Building side_ch_ctl](side_ch_ctl-and-the-Side-Channel.md#building). Rebuilding both after any driver, kernel, or FPGA change is worth doing on general principle, not just when the crash already happened.
+
 ## Build-host problems
 
 ### Kernel config prompts for new options (GCC plugins, stack canary, Xen…)
