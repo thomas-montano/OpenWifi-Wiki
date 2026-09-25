@@ -79,6 +79,8 @@ extra_javascript:
   # Opens external links (other sites) in a new tab. Internal wiki links stay
   # in the same tab so navigation.instant keeps handling them.
   - assets/javascripts/external-links.js
+  # Counts each wiki page, including instant navigation, without a hosted script.
+  - assets/javascripts/analytics.js
 
 markdown_extensions:
   - abbr
@@ -122,6 +124,18 @@ plugins:
       fallback_to_build_date: true
 
 extra:
+  analytics:
+    feedback:
+      title: Was this page helpful?
+      ratings:
+        - icon: material/thumb-up-outline
+          name: Yes, this page was helpful
+          data: "yes"
+          note: Thanks for your feedback.
+        - icon: material/thumb-down-outline
+          name: No, this page needs work
+          data: "no"
+          note: Thanks for your feedback.
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/open-sdr/openwifi

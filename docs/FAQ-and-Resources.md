@@ -102,6 +102,12 @@ A curated playlist lives in [`doc/videos.md`](https://github.com/open-sdr/openwi
 - **Commercial support & advanced features:** <https://openwifi.tech>
 - **Contributing:** see [Contributing to openwifi](Contributing-to-openwifi.md), with the `CONTRIBUTING.md` in each repo as the authoritative follow-up.
 
+## Site analytics
+
+This wiki uses GoatCounter to count page visits, referring sites, outbound link categories, search outcomes, and page feedback. It sends page paths, referring domains, link categories, search outcome counts, and feedback votes.
+
+The analytics code does not send search terms, full referrer links, full outbound links, or query strings. It does not use cookies or browser storage. GoatCounter uses your IP address and browser information in memory for up to eight hours to estimate visits. Its default settings store aggregate counts. See [GoatCounter's privacy policy](https://www.goatcounter.com/help/privacy) for details.
+
 ## License
 
 Dual-licensed: **AGPLv3** for open source, with commercial/advanced licensing via [openwifi.tech](https://openwifi.tech). Some files are GPL-2.0-or-later or BSD-3-Clause, so check individual files. Third-party components (Analog Devices HDL, Xilinx IP, openofdm) carry their own licenses, and it's your responsibility to comply for your use case. Analog Devices' [compound-license explanation](https://github.com/analogdevicesinc/hdl/blob/master/LICENSE) is a useful model for the situation.
