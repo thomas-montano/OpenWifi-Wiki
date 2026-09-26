@@ -38,6 +38,11 @@ This page takes you from an empty SD card to a working openwifi access point tha
 ## 2. Flash the SD card
 
 1. Download the prebuilt openwifi image linked from the [openwifi README](https://github.com/open-sdr/openwifi#download-img-and-quick-start) and unzip it to a `.img` file. At the time of writing, the image is `openwifi-1.5.0-shahecheng.img.xz`.
+
+    !!! note "Prebuilt image version"
+
+        The prebuilt image may lag the current repository. For development with current code, follow [Software Development Workflow](Software-Development-Workflow.md) to update the board's files and build the driver against the matching kernel.
+
 2. Write it to the SD card with an imaging tool (GNOME Disks, Startup Disk Creator, win32diskimager) or with `dd`. Check the image's sector count and your SD card device before editing the example write command:
 
     ```bash

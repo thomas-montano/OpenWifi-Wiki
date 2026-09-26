@@ -26,6 +26,8 @@ Unlike a commercial Wi-Fi chip, every layer of openwifi is open and modifiable. 
 - **Throughput** in its best configuration (802.11n with A-MPDU aggregation): 40 to 50 Mbps TCP and about 50 Mbps UDP in iperf.
 - **RF quality**: EVM around −38 dB, and receiver sensitivity around −92 dBm at MCS0 and −73 dBm at MCS7 (measured with FMCOMMS2 at 2.4 GHz).
 
+See [Specifications](Specifications.md) for the source of these figures and the conditions they describe.
+
 !!! note "Not in the open-source release"
     MIMO and 40 MHz bandwidth are *not* supported in the open-source release. 802.11ax and other advanced features are part of the commercial offering at [openwifi.tech](https://openwifi.tech).
 

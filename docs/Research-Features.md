@@ -191,28 +191,18 @@ The capture is windowed around a trigger event: `iq_len` total samples, of which
 
 ### Trigger conditions (register 8)
 
-`./side_ch_ctl wh8dY` selects the trigger (0 to 31). The most useful:
+`./side_ch_ctl wh8dY` selects the trigger (0 to 31). These triggers appear in the recipes below:
 
 | Y | Trigger |
 |---|---|
-| 0 | FCS checked (pass or fail), or free-run |
-| 1 / 2 | FCS pass / FCS fail |
-| 3 | `tx_intf_iq0` becomes non-zero (first IQ out) |
-| 4 / 5 | SIGNAL-field checksum pass / fail |
-| 6 / 7 | SIGNAL checked, HT / non-HT packet |
-| 8 / 9 | Long / short preamble detected |
-| 10 / 11 | RSSI crosses above / below threshold |
-| 12 / 13 | AGC lock→unlock / unlock→lock |
-| 14 / 15 | AGC gain crosses above / below threshold |
-| 16 | `tx_control_state` hits a target value (set via `wh5`) |
-| 17 | `phy_tx_done` from the OFDM TX core |
-| 18 to 21 | Edges of `tx_bb_is_ongoing` / `tx_rf_is_ongoing` |
-| 22 / 23 | `phy_tx_started` / `phy_tx_done`, packet needs ACK |
-| 24 | `tx_control_state` **and** phy_type (0 Legacy, 1 HT, 2 HE) both hit (via `wh5`) |
-| 25 | addr1 and/or addr2 matched (configure like the CSI filter) |
-| 26–31 | ACK-related TX edges and dual-antenna collision conditions |
+| 0 | FCS checked (pass or fail), or free-run when register 5 bit 0 is set |
+| 8 | Long preamble detected |
+| 16 | `tx_control_state` hits the target set in register 5 |
+| 23 | TX finishes for a packet that needs an ACK |
+| 25 | Address match, subject to the match bits in register 1 |
+| 29 | Antenna 1 IQ exceeds the threshold while TX RF is ongoing |
 
-Thresholds: RSSI via `wh9dY` (an 11-bit signed `rssi_half_db` value, keep it ≤ 1023), AGC gain via `wh10dY` (0 to 127). For free-run, use `wh8d0` **and** `wh5d1` together. Register 5 is multi-purpose (bit0 free-run, bits7-4 `tx_control_state` target, bits9-8 phy_type). For example `wh5h230` targets `tx_control_state=SEND_BLK_ACK(3)` and `phy_type=HE(2)`.
+For free-run, use `wh8d0` **and** `wh5d1` together. The [full trigger reference](side_ch_ctl-and-the-Side-Channel.md#trigger-reference-register-8) covers all 32 conditions. See the [register configuration](side_ch_ctl-and-the-Side-Channel.md#configuration) for thresholds and register 5 settings.
 
 ### Frequency-offset check and SNR
 
