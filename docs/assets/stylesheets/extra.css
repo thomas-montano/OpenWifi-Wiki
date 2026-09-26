@@ -99,7 +99,7 @@
 .md-typeset table:not([class]) {
   border: 1px solid var(--ow-rule);
   border-radius: 10px;
-  overflow: hidden;
+  overflow: auto;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   font-size: 0.8rem;
 }
@@ -122,15 +122,13 @@
 .md-typeset table:not([class]) tbody tr:hover {
   background: color-mix(in srgb, var(--md-accent-fg-color) 7%, transparent);
 }
-/* Keep a single code token (board name, register name, path) on one line so
-   a column is never squeezed narrower than its content and clips a
-   character. `overflow-wrap: normal` is what enforces that: a token with no
-   spaces stays whole and the table scrolls horizontally instead. Multi-word
-   code, like a quoted error message, may still wrap at its spaces, so one
-   long span cannot claim half the table and squeeze the other columns. */
+/* Keep board names and other single code tokens whole in table cells.
+   Material sets word-break: break-word on code, which splits these tokens.
+   Multi-word code may still wrap at spaces. Wide tables scroll horizontally. */
 .md-typeset table:not([class]) code {
   white-space: normal;
   overflow-wrap: normal;
+  word-break: normal;
 }
 
 /* ---- Code ---- */
