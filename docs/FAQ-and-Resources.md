@@ -26,7 +26,7 @@ openwifi is OFDM-only and not backward-compatible with 802.11b, which makes 2.4 
 
 Yes. The AD9361 tunes from 70 MHz to 6 GHz. Bring the system up on the nearest legal channel, lock the frequency so the driver stops re-tuning it, then override the RF frequency. See [sdrctl → arbitrary tuning](sdrctl-and-Runtime-Control.md#frequency-locking-and-arbitrary-tuning). Mind your local spectrum regulations.
 
-The upstream README also lists narrower channels as possible, 2 MHz for sub-GHz 802.11ah-style work and 10 MHz for 802.11p vehicular work. Neither upstream repository documents how to set them up, so ask on the [mailing list or in Discussions](#community-and-support) before you plan around them.
+The upstream README also lists 2 MHz for sub-GHz 802.11ah-style work and 10 MHz for 802.11p vehicular work. These need a matched FPGA, RF filter, driver, and MAC timing configuration. See [Adapting the design for 10 MHz or 2 MHz channels](FPGA-Development.md#adapting-the-design-for-10-mhz-or-2-mhz-channels) for the source-based modification path and its limits.
 
 ### The receiver stops working after about two hours. Broken?
 

@@ -126,6 +126,36 @@ Pair these FPGA macros with the driver's conditional-compile arguments (see [Sof
 
 The default baseband clock is 100 MHz, set by `NUM_CLK_PER_US` at the top of `boards/openwifi.tcl` in the openwifi-hw repo. Available options depend on the board: 240/100 MHz on ZCU102, 100/200 MHz on ZC706 and ADRV9361-Z7035, and 100 MHz elsewhere. Change the value and re-run `openwifi.tcl` to regenerate the project.
 
+## Adapting the design for 10 MHz or 2 MHz channels
+
+The [openwifi README](https://github.com/open-sdr/openwifi/blob/master/README.md) lists 10 MHz for 802.11p-style experiments and 2 MHz for sub-GHz 802.11ah-style experiments. The released bitstream and driver implement 20 MHz OFDM. There is no runtime bandwidth setting or ready-made narrow-channel image. The steps below identify the changes needed for a matched experimental build. They are derived from the current source and [guidance from the maintainer](https://github.com/open-sdr/openwifi/issues/155#issuecomment-1093007327). Neither target has been verified as a working release.
+
+| Target channel | OFDM sample rate | AD9361 sample rate with the existing 2:1 FPGA decimator and interpolator | OFDM symbol with guard interval | Legacy preamble and SIGNAL | `SAMPLING_RATE_MHZ` |
+|---|---:|---:|---:|---:|---:|
+| 10 MHz | 10 Msps | 20 Msps | 8 µs | 40 µs | `10` |
+| 2 MHz | 2 Msps | 4 Msps | 40 µs | 200 µs | `2` |
+
+The table assumes the same 64-point OFDM waveform scaled in time. It does not turn the design into a complete 802.11p or 802.11ah implementation.
+
+1. **Change the FPGA sample pacing.** Set `SAMPLING_RATE_MHZ` in [`ip/board_def.v`](https://github.com/open-sdr/openwifi-hw/blob/master/ip/board_def.v) to the target value. `NUM_CLK_PER_SAMPLE` then controls the RX strobe in [`rx_iq_intf.v`](https://github.com/open-sdr/openwifi-hw/blob/master/ip/rx_intf/src/rx_iq_intf.v). For 2 MHz with the default 100 MHz FPGA clock, widen its five-bit `counter` and `counter_top` registers to at least six bits so they can count 50 clocks per sample. The 10 MHz setting needs 10 clocks per sample and fits the existing registers. Keep `NUM_CLK_PER_US` at the board-supported FPGA clock. It sets FPGA processing speed and microsecond timers, not RF channel width.
+2. **Keep the RF and FPGA sample rates matched.** The RX path in [`adc_intf.v`](https://github.com/open-sdr/openwifi-hw/blob/master/ip/rx_intf/src/adc_intf.v) keeps every second AD9361 sample. The TX path in [`dac_intf.v`](https://github.com/open-sdr/openwifi-hw/blob/master/ip/tx_intf/src/dac_intf.v) inserts a zero between baseband samples. With those paths unchanged, use the AD9361 rates in the table. Check their valid signals and FIFO behavior in simulation after changing clocks. A direct one-to-one RF and baseband rate instead requires changing both paths and their handshakes, as the maintainer describes in [issue #155](https://github.com/open-sdr/openwifi/issues/155).
+3. **Prepare a matching AD9361 filter and initialization script.** Copy [`rf_init_11n.sh`](https://github.com/open-sdr/openwifi/blob/master/user_space/rf_init_11n.sh) and replace its 40,000,000 Hz input and output sampling-frequency values with 20,000,000 Hz for a 10 MHz channel or 4,000,000 Hz for a 2 MHz channel. Design a new `.ftr` file for that rate and occupied spectrum, using the [shipped filter file](https://github.com/open-sdr/openwifi/blob/master/user_space/openwifi_ad9361_fir_tx_0MHz_11n.ftr) as a format example. Set both RF bandwidth values in the script to match the new filter design. The shipped `.ftr` file and RF bandwidth values are for the 20 MHz waveform. [`wgd.sh`](https://github.com/open-sdr/openwifi/blob/master/user_space/wgd.sh) calls `rf_init_11n.sh` before loading the modules, so make it call your variant. The IIO sysfs values should read back at the intended rates after the script runs.
+4. **Update and rebuild the driver.** In [`sdr.c`](https://github.com/open-sdr/openwifi/blob/master/driver/sdr.c), `priv->rf_bw = 40000000` also sets the AD9361 clock chain and RF bandwidth when the driver probes. Replace this fixed value and its 20 or 40 MHz mode branch with settings for the new AD9361 rate and the selected center-band RX and TX paths. Otherwise the driver can overwrite the script's RF settings. The driver also reports `RATE_INFO_BW_20` for received packets. For 10 MHz operation exposed through Linux, add the appropriate 10 MHz channel-width capability and report the actual RX width. The bundled `nl80211.h` lists 10 MHz but does not enable it in the openwifi driver. The kernel and regulatory channel list must also permit the selected frequency. For 2 MHz, Linux has no equivalent 2 MHz OFDM channel width in this driver, so treat the Linux interface as an experimental control path and verify the actual width at RF.
+5. **Rework MAC timing and rate reporting.** The table gives the new symbol and legacy preamble durations. The ACK, CTS, timeout, and duration calculations in [`sdr.c`](https://github.com/open-sdr/openwifi/blob/master/driver/sdr.c), [`xpu.c`](https://github.com/open-sdr/openwifi/blob/master/driver/xpu/xpu.c), and [`tx_intf.c`](https://github.com/open-sdr/openwifi/blob/master/driver/tx_intf/tx_intf.c) contain values calibrated for 20 MHz. Update them for the target waveform, and check the Linux rate table so it does not advertise 20 MHz data rates. The maintainer also warns that RSSI and CCA calibration changes with the RF and FPGA configuration.
+6. **Build and measure the matched image.** Rebuild the FPGA as described [above](#building-the-bitstream), rebuild the driver as described in [Software Development Workflow](Software-Development-Workflow.md), and load both on each test board. Check the AD9361 sampling-frequency and RF-bandwidth sysfs values after `wgd.sh`, measure the transmitted spectrum and packet duration, then test receive and ACK timing between two boards configured identically. Use a shielded setup or an attenuated cable link for the first tests. Changing the `iw` frequency only changes the center frequency and does not demonstrate a narrow channel.
+
+After loading the matched FPGA and driver on a board, read back the RF settings from the AD9361 IIO device:
+
+```bash
+for device in /sys/bus/iio/devices/iio:device*; do
+    if [ -f "$device/in_voltage_rf_bandwidth" ]; then
+        grep -H . "$device"/{in,out}_voltage_{sampling_frequency,rf_bandwidth}
+    fi
+done
+```
+
+For 10 MHz vehicular use, a working narrow OFDM waveform still needs the appropriate 802.11p channel, MAC timing, and regulatory behavior. For 2 MHz sub-GHz use, scaling legacy OFDM does not implement the 802.11ah S1G PHY or its MAC. The [802.11p discussion](https://github.com/open-sdr/openwifi/issues/394) reports that a 10 MHz FPGA and RF modification did not establish a working ad-hoc link, so verify the complete link before treating either target as supported.
+
 ## High-Level Synthesis (HLS) modules
 
 Two receiver modules, channel estimation (`ch_gain_cal`) and equalization (`equalizer`), are also available as C++ that Vitis HLS turns into Verilog, which can speed up algorithm development.

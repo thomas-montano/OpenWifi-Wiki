@@ -15,7 +15,7 @@ Every figure carries a **footnote** that points to its source so you can check i
 | Parameter | Value |
 |---|---|
 | Wi-Fi standards | 802.11a, 802.11g, and 802.11n (Wi-Fi 4), 20 MHz, single spatial stream[^readme] |
-| Channel bandwidth | 20 MHz. Upstream also lists 10 MHz for 802.11p and 2 MHz for 802.11ah-style sub-GHz work, but documents no procedure for them (see the [FAQ](FAQ-and-Resources.md#can-it-work-outside-normal-wi-fi-frequencies)).[^readme] |
+| Channel bandwidth | 20 MHz in the released design. Upstream lists 10 MHz and 2 MHz as adaptation targets. Both need FPGA, RF, and driver changes (see [Narrow-channel setup](FPGA-Development.md#adapting-the-design-for-10-mhz-or-2-mhz-channels)).[^readme] |
 | RF tuning range | 70 MHz–6 GHz (Analog Devices AD9361 or AD9364 front end)[^faq] |
 | Baseband transceiver sample rate | 20 Msps (20 MHz mode)[^docreadme] |
 | AD9361 ↔ FPGA sample rate | 40 Msps (decimated and interpolated to 20 Msps in the FPGA)[^docreadme] |

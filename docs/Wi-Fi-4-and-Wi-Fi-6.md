@@ -75,7 +75,7 @@ This section is for people who know RF and digital modulation but haven't worked
 | Wi-Fi 6 | 802.11ax | Commercial only, via [openwifi.tech](https://openwifi.tech)[^readme] |
 
 !!! note "Narrower channels (2 MHz and 10 MHz)"
-    The upstream README also lists 2 MHz channels for 802.11ah-style sub-GHz work and 10 MHz channels for 802.11p vehicular work. These would be bandwidth and frequency reconfigurations of the same 802.11a/g/n design, not extra standards. Neither upstream repository documents how to set them up (see the [FAQ](FAQ-and-Resources.md#can-it-work-outside-normal-wi-fi-frequencies)). Tuning a 20 MHz channel to an arbitrary center frequency is documented in [sdrctl → frequency tuning](sdrctl-and-Runtime-Control.md#frequency-locking-and-arbitrary-tuning).
+    The upstream README lists 2 MHz for 802.11ah-style sub-GHz work and 10 MHz for 802.11p vehicular work. These are adaptation targets for the 20 MHz design, not complete implementations of either standard. See [Adapting the design for 10 MHz or 2 MHz channels](FPGA-Development.md#adapting-the-design-for-10-mhz-or-2-mhz-channels) for the FPGA, RF, driver, and timing changes. [Frequency tuning](sdrctl-and-Runtime-Control.md#frequency-locking-and-arbitrary-tuning) changes the center frequency only.
 
 ### Why there's no Wi-Fi 5
 
