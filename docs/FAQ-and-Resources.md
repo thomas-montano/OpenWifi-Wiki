@@ -107,7 +107,7 @@ Use the [openwifi issue tracker](https://github.com/open-sdr/openwifi/issues) fo
 
 ## Site analytics
 
-This wiki uses GoatCounter to count page visits, referring sites, outbound link categories, search outcomes, and page feedback. It sends page paths, referring domains, link categories, search outcome counts, and feedback votes.
+This wiki uses GoatCounter to count page visits, referring sites, outbound link categories, search outcomes, and page feedback. It sends page paths, screen widths, referring domains, link categories, search outcome counts, and feedback votes.
 
 The analytics code does not send search terms, full referrer links, full outbound links, or query strings. It does not use cookies or browser storage. GoatCounter uses your IP address and browser information in memory for up to eight hours to estimate visits. Its default settings store aggregate counts. See [GoatCounter's privacy policy](https://www.goatcounter.com/help/privacy) for details.
 

@@ -104,7 +104,7 @@
   document$.subscribe(function () {
     const path = location.pathname;
     if (path !== lastPath) {
-      const fields = { p: path };
+      const fields = { p: path, s: screen.width };
       if (firstPage) {
         const source = referringHost();
         if (source) fields.r = 'https://' + source;
