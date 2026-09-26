@@ -1,9 +1,9 @@
 # Glossary
 
-openwifi sits at the intersection of Wi-Fi (802.11), FPGA/SoC design, and the Linux wireless stack, so the documentation is dense with acronyms from all three worlds. This page defines the terms used across the wiki. Use your browser's search, or the site search, to jump to a term.
+openwifi sits at the intersection of Wi-Fi (802.11), FPGA and SoC design, and the Linux wireless stack. The documentation therefore uses many acronyms from all three fields. This page defines the terms used across the wiki. Use your browser's search, or the site search, to jump to a term.
 
 A-MPDU
-:   Aggregated MAC Protocol Data Unit. An 802.11n frame-aggregation method that packs several MPDUs (each with its own header/CRC) into one transmission, so a single error costs only one retransmission. openwifi supports this experimentally (`./wgd.sh 1`). See [Architecture](Architecture.md#what-openwifi-implements-of-80211agn).
+:   Aggregated MAC Protocol Data Unit. An 802.11n frame-aggregation method that packs several MPDUs (each with its own header and CRC) into one transmission, so a single error costs only one retransmission. openwifi supports this experimentally (`./wgd.sh 1`). See [Architecture](Architecture.md#what-openwifi-implements-of-80211agn).
 
 A-MSDU
 :   Aggregated MAC Service Data Unit. The other 802.11n aggregation method, more efficient on the wire, but one bit error invalidates the whole aggregate. **Not** supported by openwifi.
@@ -21,7 +21,7 @@ AGC
 :   Automatic Gain Control. The AD9361 circuit that adjusts receive gain to keep the signal in range. openwifi can capture the AGC gain/lock state per sample during [IQ capture](Research-Features.md#iq-capture).
 
 AIFS
-:   Arbitration Interframe Space: the per-access-category idle time a station waits before backoff in the QoS (EDCA) variant of CSMA/CA. Set per TX queue by Linux through the `conf_tx` callback. See [Architecture](Architecture.md#how-the-driver-talks-to-linux-the-mac80211-api).
+:   Arbitration Interframe Space: the per-access-category idle time a station waits before backoff in the QoS (EDCA) variant of CSMA/CA. Set per TX queue by Linux through the `conf_tx` callback. See [Architecture](Architecture.md#how-the-driver-talks-to-linux-through-the-mac80211-api).
 
 ATF (BL31)
 :   ARM Trusted Firmware. On 64-bit ZynqMP boards (ZCU102) the "BL31" secure-monitor stage is required in the boot chain. It is not needed on 32-bit Zynq-7000 boards.
@@ -33,7 +33,7 @@ Baseband
 :   The signal at (or near) zero frequency, before RF up-conversion. openwifi's Wi-Fi baseband runs at 20 Msps inside the FPGA, derived from the AD9361's 40 Msps IQ stream.
 
 BRAM
-:   Block RAM: the FPGA's on-chip memory blocks. openwifi uses BRAM for the TX packet buffer and the side-channel capture FIFO. Small (Zynq-7020) FPGAs have less of it, which is why capture buffers are capped shorter there (the `SIDE_CH_LESS_BRAM` build). See [Supported Boards](Supported-Boards.md).
+:   Block RAM: the FPGA's on-chip memory blocks. openwifi uses BRAM for the TX packet buffer and the side-channel capture FIFO. Small (Zynq-7020) FPGAs have less of it, so capture buffers have lower length limits there (the `SIDE_CH_LESS_BRAM` build). See [Supported Boards](Supported-Boards.md).
 
 BSSID
 :   Basic Service Set Identifier: the MAC address identifying a Wi-Fi network (the AP's address in infrastructure mode). The FPGA can filter received frames by BSSID.
@@ -45,7 +45,7 @@ CDD
 :   Cyclic Delay Diversity: transmitting a 1-sample-delayed copy of the signal on a second antenna to add artificial multipath and improve robustness. openwifi supports a simple CDD via `tx_intf` register 16.
 
 cfg80211 / mac80211
-:   The two layers of the Linux kernel wireless stack. `cfg80211` is the configuration API, and `mac80211` is the SoftMAC layer that openwifi's driver plugs into. See [Architecture](Architecture.md#how-the-driver-talks-to-linux-the-mac80211-api).
+:   The two layers of the Linux kernel wireless stack. `cfg80211` is the configuration API, and `mac80211` is the SoftMAC layer that openwifi's driver plugs into. See [Architecture](Architecture.md#how-the-driver-talks-to-linux-through-the-mac80211-api).
 
 CSI
 :   Channel State Information: the per-subcarrier channel response the receiver estimates. openwifi can stream CSI (plus frequency offset and equalizer output) to a PC. The project also puns it as "Chip State Information." See [Research Features](Research-Features.md#csi-channel-state-information).
@@ -54,7 +54,7 @@ CSMA/CA
 :   Carrier-Sense Multiple Access with Collision Avoidance: the 802.11 channel-access mechanism (the DCF). openwifi implements it in the FPGA's `xpu` core so it can meet microsecond timing.
 
 CW
-:   Contention Window. The range from which CSMA/CA picks a random backoff. Per-queue CWmin/CWmax are configurable via `sdrctl`.
+:   Contention Window. The range from which CSMA/CA picks a random backoff. Per-queue CWmin and CWmax are configurable via `sdrctl`.
 
 DCF
 :   Distributed Coordination Function: the standard's name for the CSMA/CA-based channel-access method. Implemented in `csma_ca.v` inside `xpu`.
@@ -72,7 +72,7 @@ DMA
 :   Direct Memory Access. Moves packets and captured samples between the FPGA and the processor's memory without CPU copying. openwifi uses a TX descriptor ring and an RX cyclic buffer.
 
 EIFS
-:   Extended Interframe Space: a longer wait used after a reception error. Configurable/defeatable in `xpu`.
+:   Extended Interframe Space: a longer wait used after a reception error. You can configure or disable it in `xpu`.
 
 ERP
 :   Extended Rate PHY: the 802.11g amendment that brought OFDM to 2.4 GHz. "ERP short-slot" (the shorter 9 µs slot time) is one of the CSMA parameters `xpu` register 4 carries.
@@ -93,7 +93,7 @@ FFT / IFFT
 :   (Inverse) Fast Fourier Transform: the core OFDM operation. `openofdm_tx` uses an IFFT to build the time-domain signal from the subcarriers, and the receiver uses an FFT to recover them.
 
 FMC
-:   FPGA Mezzanine Card: a standard connector/daughter-card form factor. The AD9361-carrying FMCOMMS2/3/4 cards are FMC modules that plug into the Xilinx dev boards.
+:   FPGA Mezzanine Card: a standard connector and daughter-card form factor. The AD9361-carrying FMCOMMS2/3/4 cards are FMC modules that plug into the Xilinx dev boards.
 
 FMCOMMS2/3/4
 :   Analog Devices FMC daughter-cards carrying the AD9361, used with Xilinx dev boards (ZC706, ZedBoard, ZC702, ZCU102) in several supported openwifi platforms.
@@ -102,7 +102,7 @@ FPGA
 :   Field-Programmable Gate Array: the reconfigurable logic fabric (inside the Zynq SoC) where openwifi's PHY and real-time MAC live.
 
 FRU
-:   Field-Replaceable Unit: here, the identification data in an FMCOMMS board's EEPROM. A wrong or empty FRU EEPROM can crash the host (notably ZCU102). Reprogram it with `fru_tools`. See [Troubleshooting](Troubleshooting.md#fmcomms-board-causes-a-linux-crash-badempty-eeprom).
+:   Field-Replaceable Unit: here, the identification data in an FMCOMMS board's EEPROM. A wrong or empty FRU EEPROM can crash the host (for example a ZCU102). Reprogram it with `fru_tools`. See [Troubleshooting](Troubleshooting.md#fmcomms-board-causes-a-linux-crash-bad-or-empty-eeprom).
 
 FSBL
 :   First Stage Boot Loader. The initial boot stage built from the hardware description. On some boards it (rather than U-Boot SPL) is needed to initialize DDR correctly.
@@ -126,7 +126,7 @@ hostapd
 :   The standard Linux user-space daemon that turns a Wi-Fi interface into an access point. openwifi runs stock `hostapd` over `sdr0`. See [hostapd and wpa_supplicant](hostapd-and-wpa_supplicant.md).
 
 HT
-:   High Throughput: the 802.11n feature set. Related terms: **HT-SIG** (the 11n signal field), **STF/LTF** (short/long training fields in the preamble).
+:   High Throughput: the 802.11n feature set. Related terms: **HT-SIG** (the 11n signal field), **STF** and **LTF** (the short and long training fields in the preamble).
 
 IBSS
 :   Independent Basic Service Set: 802.11 ad-hoc mode, where stations talk peer-to-peer without an AP. See [Operating Modes](Operating-Modes.md#ad-hoc-ibss).
@@ -141,10 +141,10 @@ IQ samples
 :   In-phase/Quadrature samples: the complex representation of a baseband signal. openwifi can capture raw IQ via the side channel.
 
 Kuiper (ADI Kuiper)
-:   Analog Devices' Debian/Ubuntu-based Linux distribution for its SDR platforms, and the classic openwifi runtime environment (the alternative is OpenWrt). See [Building SD Images](Building-SD-Images.md).
+:   Analog Devices' Linux distribution for its SDR platforms, similar to Debian or Ubuntu. It is the classic openwifi runtime environment. OpenWrt is another option. See [Building SD Images](Building-SD-Images.md).
 
 LBT
-:   Listen Before Talk: the regulatory term for carrier sensing before transmitting. In openwifi the LBT/CCA threshold is a `sdrctl`-tunable register.
+:   Listen Before Talk: the regulatory term for carrier sensing before transmitting. In openwifi the CCA (LBT) threshold is a `sdrctl`-tunable register.
 
 LO
 :   Local Oscillator: the mixing frequency in the RF chain. openwifi switches the TX LO on just before a packet and off after, so it doesn't interfere with reception.
@@ -156,13 +156,13 @@ MAC (low / upper)
 :   Medium Access Control. openwifi splits it: the **upper MAC** (association, management) runs in Linux `mac80211`, and the **low MAC** (real-time CSMA/CA, ACK, timers) runs in the FPGA `xpu` core.
 
 MCS
-:   Modulation and Coding Scheme: an index selecting modulation + code rate (and thus data rate). openwifi supports MCS 0–7 (single stream).
+:   Modulation and Coding Scheme: an index selecting modulation + code rate (and thus data rate). openwifi supports MCS 0 to 7 (single stream).
 
 MIMO
 :   Multiple-Input Multiple-Output: using multiple spatial streams for higher throughput. **Not** supported in the open-source release.
 
 minstrel_ht
-:   The default Linux `mac80211` rate-control algorithm, which picks the TX rate/MCS automatically. openwifi lets you override it and pin a fixed rate via `sdrctl`. See [sdrctl](sdrctl-and-Runtime-Control.md#tx-rate-mcs-override).
+:   The default Linux `mac80211` rate-control algorithm, which picks the TX rate or MCS automatically. openwifi lets you override it and pin a fixed rate via `sdrctl`. See [sdrctl](sdrctl-and-Runtime-Control.md#tx-rate-and-mcs-override).
 
 Monitor mode
 :   A receive mode that captures every frame, including control frames and bad-FCS frames. Prerequisite for packet injection and most research captures.
@@ -219,7 +219,7 @@ sdr0
 :   The network-interface name the openwifi driver creates for the board's Wi-Fi. Standard Linux tools (`iw`, `tcpdump`, `hostapd`, `wpa_supplicant`) all operate on `sdr0`. See [Operating Modes](Operating-Modes.md).
 
 Side channel (`side_ch`)
-:   openwifi's FPGA capture engine: it taps the receiver's IQ and the demodulator's internal results (CSI, equalizer) and DMAs them to the host, independent of the normal packet path. See [FPGA IP Cores](FPGA-IP-Cores.md#side_ch-the-csi-iq-capture-side-channel).
+:   openwifi's FPGA capture engine: it taps the receiver's IQ and the demodulator's internal results (CSI, equalizer) and DMAs them to the host, independent of the normal packet path. See [FPGA IP Cores](FPGA-IP-Cores.md#side_ch-the-csi-and-iq-capture-side-channel).
 
 SIFS
 :   Short Interframe Space: the brief gap before an ACK, 10 µs in 2.4 GHz (802.11g) and 16 µs in 5 GHz (802.11a). Meeting SIFS timing is why the low MAC has to be in hardware.
@@ -231,13 +231,13 @@ SODIMM
 :   Small Outline DIMM: the pluggable DRAM module used on some boards (for example the ZCU102). Certain modules fail with the U-Boot SPL DDR bring-up. See [Troubleshooting](Troubleshooting.md#no-uart-output-on-zcu102-under-openwrt).
 
 SoftMAC
-:   A Wi-Fi design where the upper MAC runs in host software (Linux `mac80211`) rather than on the chip. openwifi is a SoftMAC design, which is why standard Linux tools work over `sdr0`.
+:   A Wi-Fi design where the upper MAC runs in host software (Linux `mac80211`) rather than on the chip. openwifi is a SoftMAC design, so standard Linux tools work over `sdr0`.
 
 SoM
 :   System on Module: a small board carrying the SoC, RAM, and support circuitry, mounted on a larger carrier. The ADRV9364-Z7020 and ADRV9361-Z7035 are SoMs on the ADRV1CRR carrier.
 
 SPI
-:   Serial Peripheral Interface. openwifi drives the AD9361's TX chain in real time over an FPGA-generated SPI link (`spi.v` in `xpu`) for fast TX/RX turnaround.
+:   Serial Peripheral Interface. openwifi drives the AD9361's TX chain in real time over an FPGA-generated SPI link (`spi.v` in `xpu`) for fast TX-to-RX turnaround.
 
 SPL
 :   Secondary Program Loader: U-Boot's first-stage loader. On some 64-bit boards it mis-configures certain DDR modules, so the Xilinx FSBL is used instead. See [Troubleshooting](Troubleshooting.md#no-uart-output-on-zcu102-under-openwrt).
@@ -249,7 +249,7 @@ sysfs
 :   The Linux virtual filesystem exposing kernel/driver variables as files. openwifi exposes its statistics and some controls through sysfs. See [sdrctl](sdrctl-and-Runtime-Control.md#statistics-via-sysfs).
 
 TSF
-:   Timing Synchronization Function: the 802.11 64-bit hardware timer. openwifi timestamps every received packet and every captured sample with the TSF, which is how CSI/IQ captures line up with specific packets.
+:   Timing Synchronization Function: the 802.11 64-bit hardware timer. openwifi timestamps every received packet and every captured sample with the TSF, so CSI and IQ captures line up with specific packets.
 
 TSN
 :   Time-Sensitive Networking: deterministic, scheduled networking. openwifi's MAC-address-based [time slicing](sdrctl-and-Runtime-Control.md#time-slicing-network-slicing) supports TSN-style experiments.
@@ -261,16 +261,16 @@ U-Boot
 :   The bootloader that loads the Linux kernel on the board. Part of `BOOT.BIN` alongside the FSBL and FPGA bitstream.
 
 UHD
-:   USRP Hardware Driver: Ettus/NI's SDR driver framework. Some MicroPhase boards can run as UHD devices via a separate project. That is unrelated to openwifi's Wi-Fi operation, but it explains their PL-side Ethernet design.
+:   USRP Hardware Driver: the SDR driver framework from Ettus Research (NI). Some MicroPhase boards can run as UHD devices via a separate project. That is unrelated to openwifi's Wi-Fi operation, but it explains their PL-side Ethernet design.
 
 VCXO
-:   Voltage-Controlled Crystal Oscillator: a tunable reference clock. Some boards (E310 v2, SDRPi) add one, with an external reference, for a more stable clock (useful for time-sync/TSN).
+:   Voltage-Controlled Crystal Oscillator: a tunable reference clock. Some boards (E310 v2, SDRPi) add one, with an external reference, for a more stable clock (useful for time synchronization and TSN).
 
 VDMA
-:   Video DMA: a Xilinx AXI DMA variant for video streams. openwifi doesn't use it, but one kernel patch comments out a VDMA/AXI-HDMI call that otherwise breaks the build once Xilinx AXI DMA is enabled. See [Boot, Kernel & Device Tree](Boot-Kernel-Device-Tree.md#the-kernel-patches).
+:   Video DMA: a Xilinx AXI DMA variant for video streams. openwifi doesn't use it, but one kernel patch comments out a VDMA call in the AXI-HDMI driver that otherwise breaks the build once Xilinx AXI DMA is enabled. See [Boot, Kernel & Device Tree](Boot-Kernel-Device-Tree.md#the-kernel-patches).
 
 Viterbi decoder
-:   The algorithm/IP that decodes the convolutional FEC on receive. openwifi uses a Xilinx Viterbi decoder IP, whose **evaluation license** is why a running board's receiver halts after ~2 hours. See [Troubleshooting](Troubleshooting.md#reception-dies-after-2-hours).
+:   The algorithm that decodes convolutional FEC on receive. openwifi uses a Xilinx IP core to implement it. The core's **evaluation license** halts a running board's receiver after about 2 hours. See [Troubleshooting](Troubleshooting.md#reception-dies-after-2-hours).
 
 Vivado / Vitis
 :   Xilinx's FPGA design tools. openwifi's FPGA build targets **Vivado 2022.2 with Vitis**. Some boards need a paid Vivado license to rebuild the FPGA, but the prebuilt images need none.
@@ -282,7 +282,7 @@ wpa_supplicant
 :   The on-board bring-up script that loads the FPGA image and the openwifi driver and brings up the `sdr0` interface. See [Software Development Workflow](Software-Development-Workflow.md).
 
 `xpu`
-:   openwifi's real-time MAC core (its largest FPGA IP block): CSMA/CA, TSF timer, hardware ACK generation/reception, packet filtering, RSSI/CCA, and TX-queue gating. See [FPGA IP Cores](FPGA-IP-Cores.md#xpu-the-real-time-mac).
+:   openwifi's real-time MAC core (its largest FPGA IP block): CSMA/CA, TSF timer, hardware ACK generation and reception, packet filtering, RSSI and CCA, and TX-queue gating. See [FPGA IP Cores](FPGA-IP-Cores.md#xpu-the-real-time-mac).
 
 Zynq / Zynq UltraScale+ (MPSoC)
 :   Xilinx SoC families. **Zynq-7000** is 32-bit (most openwifi boards). **Zynq UltraScale+ / MPSoC** is 64-bit (ZCU102), with a different boot chain.

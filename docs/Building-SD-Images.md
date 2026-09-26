@@ -2,12 +2,12 @@
 
 openwifi boots from an SD card running one of three base operating systems, and you can build any of them from scratch:
 
-- **ADI Kuiper**: a Debian/Ubuntu-like image (the classic openwifi environment, and what the `fosdem.sh` demo and most app notes assume).
+- **ADI Kuiper**: an image similar to Debian or Ubuntu (the classic openwifi environment, and what the `fosdem.sh` demo and most app notes assume).
 - **OpenWrt**: a router-style image with the LuCI web UI, with openwifi packaged as a kernel module.
 - **Buildroot**: a small, fast-booting, reproducible image aimed at deployment, currently for the MicroPhase ANTSDR boards (`antsdr_e200`, `antsdr`, `e310v2`). See [Buildroot](#buildroot) below.
 
 !!! tip "You may not need to build anything"
-    Prebuilt images exist for Kuiper and OpenWrt. If you just want a working board, flash a prebuilt image as in [Getting Started](Getting-Started.md) (Kuiper) or the [OpenWrt quick start](#openwrt-quick-start-prebuilt-image) below. Build from scratch when you need a custom kernel, a new board, or an image you control end to end.
+    Prebuilt images exist for Kuiper and OpenWrt. If you only need a working board, flash a prebuilt image as in [Getting Started](Getting-Started.md) (Kuiper) or the [OpenWrt quick start](#openwrt-quick-start-prebuilt-image) below. Build from scratch when you need a custom kernel, a new board, or an image you control end to end.
 
 The builds below assume you understand the [boot chain and device tree](Boot-Kernel-Device-Tree.md). For the driver/dev loop see [Software Development Workflow](Software-Development-Workflow.md).
 
@@ -15,7 +15,7 @@ The builds below assume you understand the [boot chain and device tree](Boot-Ker
 
 | | ADI Kuiper | OpenWrt | Buildroot |
 |---|---|---|---|
-| Feels like | A small Debian/Ubuntu box | A Wi-Fi router (LuCI web UI) | A minimal embedded appliance (serial console, BusyBox) |
+| Feels like | A small Debian or Ubuntu box | A Wi-Fi router (LuCI web UI) | A minimal embedded appliance (serial console, BusyBox) |
 | Best for | Research, the app-note workflows, full apt tooling | Router use cases | Small, reproducible deployment images |
 | Build needs | Vivado 2022.2 + Vitis | Docker only (no Vivado) | Buildroot host packages + a prebuilt XSA (no Vivado) |
 | openwifi tools | Built on the board | Packaged into the image (in `$PATH`) | Built into the image under `/root/openwifi` |
@@ -23,7 +23,7 @@ The builds below assume you understand the [boot chain and device tree](Boot-Ker
 
 ---
 
-## ADI Kuiper: build from scratch
+## ADI Kuiper build from scratch
 
 ### Prerequisites
 
@@ -185,7 +185,7 @@ Connect a phone or laptop to the **"openwifi"** SSID. You should get a `192.168.
 
 - The demo defaults to **channel 36 (5 GHz)**. For a 2.4 GHz-only client, edit `hostapd-openwifi.conf` on the board and re-run `fosdem.sh`.
 - The Xilinx **Viterbi decoder halts after ~2 hours** (evaluation license). Reload the FPGA or power-cycle to recover.
-- The **ADRV9361-Z7035 has very low 5 GHz TX power**: keep nodes close on that board.
+- The **ADRV9361-Z7035 has very low 5 GHz TX power**, so keep nodes close on that board.
 
 See [Getting Started → Start the access point](Getting-Started.md#4-start-the-access-point) for more on the bring-up, and [Research Features](Research-Features.md#csi-channel-state-information) to start capturing CSI.
 
@@ -315,7 +315,7 @@ then point the package feed at a local checkout by editing OpenWrt's `feeds.conf
 src-link openwifi /openwrt-openwifi-packages-feed
 ```
 
-You can also bind-mount the OpenWrt tree under `/workdir` so paths printed in the container are copy-pasteable on the host. OpenWrt-specific issues (including the ZCU102 UART/SODIMM problem) are collected in [Troubleshooting → OpenWrt-specific](Troubleshooting.md#openwrt-specific).
+You can also bind-mount the OpenWrt tree under `/workdir` so paths printed in the container are copy-pasteable on the host. OpenWrt-specific issues (including the ZCU102 UART and SODIMM problem) are collected in [Troubleshooting → OpenWrt-specific](Troubleshooting.md#openwrt-specific).
 
 ---
 
@@ -333,7 +333,7 @@ Buildroot currently targets three ANTSDR boards, all booted and tested on real h
 | `antsdr` | ANTSDR-E310/ANT | `ttyPS0` | 1 GiB |
 | `e310v2` | ANTSDR-E310V2 | `ttyPS0` | 1 GiB |
 
-All three share one kernel, module set, and ext4 root filesystem. Only the BOOT artifacts (SPL/U-Boot, device tree, bitstream, PS init, and UART selection) are per board.
+All three share one kernel, module set, and ext4 root filesystem. Only the BOOT artifacts (SPL and U-Boot, device tree, bitstream, PS init, and UART selection) are per board.
 
 !!! info "Different boot chain from Kuiper"
     On Buildroot, `BOOT.BIN` is the U-Boot SPL, not the Xilinx FSBL composite Kuiper uses, so it needs the separate `u-boot.img`, and **U-Boot configures the FPGA before Linux starts**. Do not mix BOOT files between the two schemes by name alone. Buildroot does not use `update_sdcard.sh`, `prepare_kernel.sh`, or `boot_bin_gen.sh`.
@@ -392,10 +392,10 @@ openwifi-start 0              # same as "./wgd.sh 0" in /root/openwifi
 ip link show sdr0
 ```
 
-The verified stable default is `test_mode=0`. Use other test modes only with a matching, explicitly tested FPGA/driver pair.
+The verified stable default is `test_mode=0`. Use other test modes only with a matching, explicitly tested FPGA and driver pair.
 
 !!! note "U-Boot owns the FPGA here"
-    Buildroot keeps the bitstream U-Boot loaded, so `wgd.sh` reuses it instead of reprogramming, the opposite of the Kuiper/OpenWrt default. For normal operation prefer `OPENWIFI_RELOAD_FPGA=0`. For development against a topology-compatible bitstream, force a reload with `OPENWIFI_RELOAD_FPGA=1 ./wgd.sh 0`. See [Reloading driver and FPGA without rebooting](Software-Development-Workflow.md#reloading-driver-and-fpga-without-rebooting).
+    Buildroot keeps the bitstream U-Boot loaded, so `wgd.sh` reuses it instead of reprogramming, the opposite of the Kuiper and OpenWrt default. For normal operation prefer `OPENWIFI_RELOAD_FPGA=0`. For development against a topology-compatible bitstream, force a reload with `OPENWIFI_RELOAD_FPGA=1 ./wgd.sh 0`. See [Reloading driver and FPGA without rebooting](Software-Development-Workflow.md#reloading-driver-and-fpga-without-rebooting).
 
 ### Update over Ethernet
 

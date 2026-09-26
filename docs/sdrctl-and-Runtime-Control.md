@@ -1,6 +1,6 @@
 # sdrctl and Runtime Control
 
-`sdrctl` is openwifi's own command-line tool for the things standard Linux Wi-Fi tools can't reach: FPGA registers, arbitrary TX/RX frequencies, TX attenuation, and MAC-address-based time slicing. It's implemented as an `nl80211` testmode command and reaches the driver (`openwifi_testmode_cmd()` in `sdrctl_intf.c`) through the normal `nl80211 → cfg80211 → mac80211` path.
+`sdrctl` is openwifi's own command-line tool for the things standard Linux Wi-Fi tools can't reach: FPGA registers, arbitrary TX and RX frequencies, TX attenuation, and MAC-address-based time slicing. It's implemented as an `nl80211` testmode command and reaches the driver (`openwifi_testmode_cmd()` in `sdrctl_intf.c`) through the normal `nl80211 → cfg80211 → mac80211` path.
 
 All commands run **on the board**, from the `openwifi` directory.
 
@@ -27,32 +27,32 @@ All commands run **on the board**, from the `openwifi` directory.
 
 | `module_name` | What it controls | Defined in |
 |---|---|---|
-| `drv_rx`, `drv_tx`, `drv_xpu` | Driver-side behavior for RX / TX / low-MAC | `sdr.c` (`drv_*_reg_val`) |
+| `drv_rx`, `drv_tx`, `drv_xpu` | Driver-side behavior for RX, TX, and the low MAC | `sdr.c` (`drv_*_reg_val`) |
 | `rf` | AD9361 RF front end (the driver forwards these to the AD9361 rather than to an FPGA core) | `sdr.h` (`rf_reg_val`) |
-| `rx_intf`, `tx_intf` | FPGA RX / TX interface modules | `hw_def.h` ↔ `rx_intf.v` / `tx_intf.v` |
-| `rx`, `tx` | FPGA OFDM receiver / transmitter (`openofdm_rx` / `openofdm_tx`) | `hw_def.h` ↔ `openofdm_rx.v` / `openofdm_tx.v` |
+| `rx_intf`, `tx_intf` | FPGA RX and TX interface modules | `hw_def.h` ↔ `rx_intf.v`, `tx_intf.v` |
+| `rx`, `tx` | FPGA OFDM receiver and transmitter (`openofdm_rx`, `openofdm_tx`) | `hw_def.h` ↔ `openofdm_rx.v`, `openofdm_tx.v` |
 | `xpu` | FPGA low MAC (CSMA/CA, timers, ACK, filtering, slicing) | `hw_def.h` ↔ `xpu.v` |
 
-The convention throughout: FPGA register *N* for module `foo` is `slv_regN` in `foo.v`. When a table here is too terse, open that `.v` file (or the matching `.c`) and search for `slv_regN`.
+Throughout this page, FPGA register *N* of module `foo` is `slv_regN` in `foo.v`. When a table here is too terse, open that `.v` file (or the matching `.c`) and search for `slv_regN`.
 
 ---
 
 ## Common runtime tasks (the ["frequent tricks"](https://github.com/open-sdr/openwifi/blob/master/doc/app_notes/frequent_trick.md))
 
-These are the day-to-day knobs, most with a convenience script in `user_space/` and the underlying `sdrctl` command shown where useful.
+These are the settings you change most often. Most have a convenience script in `user_space/`, and the underlying `sdrctl` command is shown where useful.
 
-### TX power / attenuation
+### TX power and attenuation
 
 ```bash
 ./sdrctl dev sdr0 set reg rf 0 20000     # 20 dB attenuation (unit: dB×1000). Default 0 dB.
 ```
 
-For an initial attenuation at driver-load time, load with `insmod sdr.ko init_tx_att=20000` (you can edit the `insmod` line at the end of `wgd.sh`). To *increase* TX power beyond default you can raise `tx_intf` register 13 (digital IQ gain), though too much hurts EVM and long-packet quality, or add an external PA.
+For an initial attenuation at driver-load time, load with `insmod sdr.ko init_tx_att=20000` (you can edit the `insmod` line at the end of `wgd.sh`). To *increase* TX power beyond the default, raise `tx_intf` register 13 (digital IQ gain) or add an external PA. Too much digital gain hurts EVM and long-packet quality.
 
 !!! warning "Do not connect two boards by cable during setup"
     AD9361 tuning can emit strong TX that damages the other board's RX. Bring both sides up first, apply attenuation, then connect the cable.
 
-### TX rate / MCS override
+### TX rate and MCS override
 
 By default Linux's `minstrel_ht` picks the rate. To pin it:
 
@@ -72,7 +72,7 @@ Normally the AD9361 AGC handles this. For experiments:
 ./set_rx_gain_auto.sh         # back to AGC
 ```
 
-To choose a good manual value, run under AGC, enable stats (`./stat_enable.sh`), read the actual AGC gain of received packets (`./rx_gain_show.sh`), then subtract the band offset: **−14 dB** at 5220 MHz, **−5 dB** in 2.4 GHz. (For example: observed AGC gain 34 → set `20` at 5 GHz, or `29` at 2.4 GHz.)
+To choose a good manual value, first run under AGC and enable statistics with `./stat_enable.sh`. Read the actual AGC gain of received packets with `./rx_gain_show.sh`. Then apply the band offset, which is **−14 dB** at 5220 MHz and **−5 dB** in 2.4 GHz. For example, an observed AGC gain of 34 means a manual setting of `20` at 5 GHz or `29` at 2.4 GHz.
 
 ### Antenna selection
 
@@ -81,7 +81,7 @@ To choose a good manual value, run under AGC, enable stats (`./stat_enable.sh`),
 ./sdrctl dev sdr0 set reg drv_rx 4 1    # RX antenna: 0=ant0 (default), 1=ant1
 ```
 
-### CCA / LBT (listen-before-talk) threshold
+### CCA threshold (listen before talk)
 
 The driver auto-sets a per-channel threshold. To inspect and override:
 
@@ -94,13 +94,13 @@ The driver auto-sets a per-channel threshold. To inspect and override:
 
 ### Receiver sensitivity ("action threshold")
 
-Sometimes *too* sensitive is bad, because the receiver chases weak background packets instead of your target. Ignore signals below a threshold:
+A receiver that is too sensitive can waste time on weak background packets instead of your target. To ignore signals below a threshold:
 
 ```bash
 ./sdrctl dev sdr0 set reg drv_rx 0 70   # ignore anything weaker than −70 dBm
 ```
 
-### CSMA/CA internals: NAV, DIFS, EIFS, CW
+### CSMA/CA internals (NAV, DIFS, EIFS, CW)
 
 Convenience scripts read state with no argument, disable with `1`, enable with `0`:
 
@@ -111,9 +111,9 @@ Convenience scripts read state with no argument, disable with `1`, enable with `
 ./cw_disable.sh 1      # fix contention window to 0 (no random backoff)
 ```
 
-Two finer-grained EIFS variants exist as well: `eifs_by_last_rx_fail_disable.sh` and `eifs_by_last_tx_fail_disable.sh` disable only the EIFS triggered by the last failed reception or the last failed transmission, with the same read/`1`/`0` convention. All of these scripts write the driver's `csma_cfg0` sysfs file, which when read prints the full NAV/DIFS/EIFS/CW override state in one line.
+Two finer-grained EIFS scripts follow the same convention. `eifs_by_last_rx_fail_disable.sh` disables only the EIFS that follows a failed reception, while `eifs_by_last_tx_fail_disable.sh` covers a failed transmission. All of these scripts write the driver's `csma_cfg0` sysfs file. Reading that file prints the full NAV, DIFS, EIFS, and CW override state in one line.
 
-Contention-window min/max per queue:
+Contention window minimum and maximum per queue:
 
 ```bash
 ./cw_max_min_cfg.sh                 # show current (set by Linux at NIC bring-up)
@@ -121,11 +121,11 @@ Contention-window min/max per queue:
 ./cw_max_min_cfg.sh 0               # hand control back to Linux (see note below)
 ```
 
-The hex nibbles encode log2 values: `b5` for q3 means CWmax=2¹¹−1=2047, CWmin=2⁵−1=31. Caveat: giving `0` doesn't re-apply Linux's values automatically (Linux only sets them once at bring-up), so either record and restore them yourself, or reload the NIC.
+Each hex nibble is a log2 value. For example, `b5` for q3 means CWmax = 2¹¹−1 = 2047 and CWmin = 2⁵−1 = 31. Writing `0` does not re-apply Linux's values, since Linux only sets them once at bring-up. Either record and restore them yourself, or reload the NIC.
 
 ### Retransmission and ACK control (xpu register 11)
 
-Other bits of this register have other jobs, so the value you write must combine every bit you want set. After a fresh `wgd.sh` load the register is 0 and the driver does not touch it, so the absolute values below are complete settings (25 = 16 + 8 + 1 keeps the retransmission cap and disables ACK TX). If you have changed the register since boot, read it first and merge your bits into the current value.
+Other bits of this register have other jobs, so the value you write must combine every bit you want set. After a fresh `wgd.sh` load the register is 0 and the driver does not touch it. This means the absolute values below are complete settings. For example, 25 = 16 + 8 + 1 keeps the retransmission cap and disables ACK TX. If you have changed the register since boot, read it first and merge your bits into the current value.
 
 A successful `get` prints the register's current value. If a command fails, the usual causes are that the driver is not loaded (run `wgd.sh`) or that the interface name is wrong.
 
@@ -140,26 +140,26 @@ A successful `get` prints the register's current value. If a command fails, the 
 
 The cleanest place to cap retransmissions is the driver, via `retry_limit_raw` (from which `retry_limit_hw_value` is derived) in `openwifi_tx()` in [`driver/sdr.c`](https://github.com/open-sdr/openwifi/blob/master/driver/sdr.c).
 
-### TX LO / RF-port control
+### TX LO and RF port control
 
-The FPGA switches the TX LO/port on only during transmit. To force the LO always on (needed for some [self-TX capture experiments](Research-Features.md#self-loopback-testing)):
+The FPGA turns on the TX LO and RF port only while transmitting. To force the LO always on (needed for some [self-TX capture experiments](Research-Features.md#self-loopback-testing)):
 
 ```bash
 ./sdrctl dev sdr0 set reg xpu 13 1
 ```
 
-`./set_tx_lo.sh` and `./set_tx_port.sh` show/set these (arg `1`=on, `0`=off).
+`./set_tx_lo.sh` and `./set_tx_port.sh` show or set these (argument `1` for on, `0` for off).
 
-### Frequency: restrict and arbitrary tuning
+### Frequency locking and arbitrary tuning
 
-Because AD9361 retuning can emit unwanted TX (and disrupt cable tests / background scans), you can pin the frequency:
+AD9361 retuning can emit unwanted TX and disrupt cable tests and background scans. To prevent this, lock the frequency:
 
 ```bash
 ./set_restrict_freq.sh 5220     # lock to 5220 MHz, ignore other tuning requests
 ./set_restrict_freq.sh 0        # remove the lock
 ```
 
-To run at a **non-standard frequency** (anywhere 70 MHz–6 GHz): first bring the system up normally on the nearest legal Wi-Fi channel, lock it with `set_restrict_freq.sh` so the upper layers stop scanning, then override the actual RF frequency:
+To run at a **non-standard frequency** anywhere from 70 MHz to 6 GHz, first bring the system up normally on the nearest legal Wi-Fi channel. Lock it with `set_restrict_freq.sh` so the upper layers stop scanning. Then override the actual RF frequency:
 
 ```bash
 ./sdrctl dev sdr0 set reg rf 1 3500    # TX frequency → 3.5 GHz
@@ -168,26 +168,48 @@ To run at a **non-standard frequency** (anywhere 70 MHz–6 GHz): first bring th
 
 ### Arbitrary TX IQ samples
 
-You can push up to 512 raw IQ samples into `tx_intf` and transmit them for test purposes. This uses `tx_intf` register 7 (mode/trigger) and register 1 (the IQ write port), driven by the helper scripts `tx_intf_iq_data_to_sysfs.sh` and `tx_intf_iq_send.sh`. See the arbitrary-IQ section of the [frequent tricks note](https://github.com/open-sdr/openwifi/blob/master/doc/app_notes/frequent_trick.md) for the full sequence.
+You can push up to 512 raw IQ samples into `tx_intf` and transmit them for test purposes. This uses `tx_intf` register 7 (mode and trigger) and register 1 (the IQ write port), driven by the helper scripts `tx_intf_iq_data_to_sysfs.sh` and `tx_intf_iq_send.sh`. See the arbitrary-IQ section of the [frequent tricks note](https://github.com/open-sdr/openwifi/blob/master/doc/app_notes/frequent_trick.md) for the full sequence.
 
 ---
 
 ## Time slicing (network slicing)
 
-openwifi can gate each of its four TX queues to a fraction of a repeating time cycle, keyed by destination MAC address, which is useful for TDMA-style scheduling and TSN experiments. Configure a slice via parameters:
+openwifi can gate each of its four TX queues to part of a repeating time cycle, keyed by destination MAC address. This is useful for TDMA-style scheduling and TSN experiments. Configure a slice with these parameters:
 
 | `para_name` | Meaning |
 |---|---|
-| `slice_idx` | Which slice (0–3) subsequent commands configure. **Set to 4 when done to synchronize all slices**, otherwise slice start/end times won't line up. |
+| `slice_idx` | Which slice (0–3) subsequent commands configure. **Set to 4 when done to synchronize all slices**, otherwise slice start and end times won't line up. |
 | `addr` | Target MAC for this slice (last 32 bits, for example `b94cb1c1` for `6c:fd:b9:4c:b1:c1`) |
 | `slice_total` | Cycle length in µs (for example `49999` for 50 ms) |
 | `slice_start` | Slice start time in µs (for example `10000` for 10 ms) |
 | `slice_end` | Slice end time in µs (for example `39999` for 40 ms) |
 | `tsf` | Set the TSF timer (needs two decimal values, high then low: `./sdrctl dev sdr0 set tsf 0 1000000`) |
 
-Writing 4 to `slice_idx` is a synchronization command, not a slice index: it commits all four slices at once so their start and end times line up.
+Values 0 to 3 select the slice that later commands configure. The value 4 commits all four slices at once, so their start and end times line up. A full sequence for one slice looks like this:
+
+```bash
+./sdrctl dev sdr0 set slice_idx 0
+./sdrctl dev sdr0 set addr b94cb1c1       # last 32 bits of the destination MAC
+./sdrctl dev sdr0 set slice_total 49999   # 50 ms cycle
+./sdrctl dev sdr0 set slice_start 10000   # open at 10 ms
+./sdrctl dev sdr0 set slice_end 39999     # close at 40 ms
+# repeat for slices 1 to 3 if you need them, then synchronize:
+./sdrctl dev sdr0 set slice_idx 4
+```
+
+!!! warning "`slice_cfg.sh` is out of date"
+    `user_space/slice_cfg.sh` wraps these commands, but it calls per-slice names such as `set addr0` and `set slice_total0`. The current `sdrctl` has no such commands, so the script fails. Run the commands above directly instead.
 
 The imec [w-iLab.t tutorial](https://doc.ilabt.imec.be/ilabt/wilab/tutorials/openwifi.html#sdr-tx-time-slicing) has a fuller walkthrough.
+
+## Other `sdrctl` parameters
+
+Two more parameters exist in `sdrctl` but are easy to misread. Neither is documented upstream.
+
+| `para_name` | What it does |
+|---|---|
+| `rssi_th` | `get rssi_th` prints the current CCA threshold as a positive number *N*, meaning −*N* dBm. It reads `xpu` register 8. `set rssi_th` is disabled. It returns an error, and the driver log tells you to use `drv_xpu` register 0 instead (see [CCA threshold](#cca-threshold-listen-before-talk)). |
+| `gap` | The `sdrctl` help text calls this the inter-frame gap in µs. However, the driver writes the value straight into `xpu` register 19, the per-queue CW minimum and maximum. `get gap` reads the same register. Linux rewrites register 19 whenever it configures the TX queues, so use [`cw_max_min_cfg.sh`](#csmaca-internals-nav-difs-eifs-cw) for a lasting CW override. |
 
 ---
 
@@ -218,10 +240,10 @@ The tables below list the commonly used registers. For the full set, read the mo
 
 | reg | Meaning |
 |---|---|
-| 0 | LBT/CCA threshold: 0=auto (via `ad9361_rf_set_channel()`), else `N` means −N dBm fixed |
+| 0 | CCA (LBT) threshold: 0=auto (via `ad9361_rf_set_channel()`), else `N` means −N dBm fixed |
 | 7 | Git revision of the driver build (hex) |
 
-Prefer this dBm knob (`drv_xpu` register 0, or `set_lbt_th.sh` above) to tune CCA. `xpu` register 8 below is the raw hardware register behind it.
+Prefer this dBm setting (`drv_xpu` register 0, or `set_lbt_th.sh` above) to tune CCA. `xpu` register 8 below is the raw hardware register behind it.
 
 ### `rf` (AD9361 front end)
 
@@ -236,7 +258,7 @@ Prefer this dBm knob (`drv_xpu` register 0, or `set_lbt_th.sh` above) to tune CC
 | reg | Meaning |
 |---|---|
 | 0 | Reset (per-bit to sub-modules, 1=reset, 0=normal) |
-| 2 | Enable/disable RX interrupt: 256=disable, 0=enable |
+| 2 | Enable or disable RX interrupt: 256=disable, 0=enable |
 | 3 | Loopback IQ source: 256=from `tx_intf`, 0=from AD9361 ADC |
 | 6 | Abnormal packet-length threshold (bits 31-16). DMA terminates if length outside 14..threshold |
 | 11 | RX digital IQ gain (left-shift count, default 4) |
@@ -254,10 +276,10 @@ Prefer this dBm knob (`drv_xpu` register 0, or `set_lbt_th.sh` above) to tune CC
 | 4 | CTS-to-Self config (auto-set by driver): bit31 enable, bit30 rate-select, bits23-8 duration |
 | 5 | CSI-fuzzer config (see [Research Features](Research-Features.md#csi-fuzzer-privacy-protection)) |
 | 6 | CTS-to-Self send delay for SIFS (0.1 µs, bits13-0 for 2.4 GHz, bits29-16 for 5 GHz) |
-| 7 | Arbitrary-IQ mode/trigger (bit0 mode, bit1 trigger) |
+| 7 | Arbitrary-IQ mode and trigger (bit0 mode, bit1 trigger) |
 | 11 | "Almost full" FIFO threshold (driver reads the 4-bit flag from reg 21) |
 | 13 | TX digital IQ gain before DAC (raise for more TX power, hurts EVM if too high) |
-| 16 | TX antenna + CDD: bit1 selects ant0/ant1, bit4 enables simple CDD (1-sample delay across two antennas) |
+| 16 | TX antenna + CDD: bit1 selects ant0 or ant1, bit4 enables simple CDD (1-sample delay across two antennas) |
 | 21 | Per-queue "almost full" flags (4 bits) |
 | 22–25 | Per-packet TX status read back by the TX interrupt (CW, retrans count, block-ACK bitmap, etc.) |
 | 26 | Runtime TX-queue lengths: bits 6-0 q0, 14-8 q1, 22-16 q2, 30-24 q3 |
@@ -295,10 +317,10 @@ Prefer this dBm knob (`drv_xpu` register 0, or `set_lbt_th.sh` above) to tune CC
 | reg | Meaning |
 |---|---|
 | 0 | Reset (per-bit) |
-| 1 | RX/self-IQ config on TX. bit0: 0=auto self-RX-mute on TX, 1=manual (bit31: 1 mute / 0 unmute). bit2: 1=send all RX to Linux (no filtering). **Set `xpu 1 1` to unmute self-RX for loopback/CSI-radar.** |
+| 1 | RX and self-IQ configuration during TX. bit0: 0=auto self-RX-mute on TX, 1=manual (then bit31 1=mute, 0=unmute). bit2: 1=send all RX to Linux (no filtering). **Set `xpu 1 1` to unmute self-RX for loopback and CSI radar.** |
 | 2 / 3 | TSF timer low 32 / high 31 bits. Reload triggers on the falling edge of reg 3 bit31 (write 1 then 0). |
-| 4 | Band / channel / ERP short-slot (CSMA config, auto-set by Linux, channel = frequency in MHz) |
-| 5 | DIFS/backoff advance (µs) for TX prep, bits31-16 abnormal-length threshold |
+| 4 | Band, channel, and ERP short slot (CSMA config, auto-set by Linux, channel = frequency in MHz) |
+| 5 | DIFS and backoff advance (µs) for TX preparation, bits31-16 abnormal-length threshold |
 | 6 | Multi-purpose CSMA: bits7-0 forced idle after decode (µs), bit31 NAV disable, bit30 DIFS disable, bit29 EIFS disable, bit28 dynamic-CW disable |
 | 7 | RSSI report offset (bits26-16) + AD9361 gpio/gain sync delay (bits6-0) |
 | 8 | RSSI threshold for CCA (rssi_half_db, auto-set). `xpu 8 <big>` disables CCA. |
@@ -310,13 +332,13 @@ Prefer this dBm knob (`drv_xpu` register 0, or `set_lbt_th.sh` above) to tune CC
 | 16 / 17 | Wait-for-ACK timing in 2.4 GHz / 5 GHz (0.1 µs): decode timeout, PHY-header detect timeout, FCS-required bit |
 | 18 | ACK send delay (0.1 µs): bits14-0 for 2.4 GHz, bits30-16 for 5 GHz |
 | 19 | Per-queue CW min/max (4 bits each for q0..q3, auto-set by `openwifi_conf_tx()`) |
-| 20 / 21 / 22 | Slice (queue-TX-gate) total cycle / start / end time (bits21-20 select queue, bits19-0 µs) |
-| 26 | CTS-to-RTS setting (extra duration, rate/MCS, enable bit) |
+| 20 / 21 / 22 | Slice (queue TX gate) total cycle, start time, and end time (bits21-20 select queue, bits19-0 µs) |
+| 26 | CTS-to-RTS setting (extra duration, rate or MCS, enable bit) |
 | 27 | FPGA packet-filter config (passing bits13-0, dropping bits24-16, see `openwifi_configure_filter()`) |
 | 28 / 29 | BSSID filter low 32 / high 16 bits (auto-set) |
 | 30 / 31 | Self MAC address low 32 / high 16 bits (auto-set) |
-| 57 | `rssi_half_db` (signal strength in units of 0.5 dB) read-back with channel idle/CSMA state (pair with `rssi_openwifi_show.sh` / `rssi_ad9361_show.sh`) |
-| 58 / 59 | TSF runtime value low / high (read-only) |
+| 57 | `rssi_half_db` (signal strength in units of 0.5 dB) read-back with channel idle and CSMA state (pair with `rssi_openwifi_show.sh` or `rssi_ad9361_show.sh`) |
+| 58 / 59 | TSF runtime value, low and high word (read-only) |
 | 62 | addr2 of the last RX packet, read back (bits31-0 from addr2 bits47-16) |
 | 63 | Git revision of the FPGA build (hex) |
 
@@ -324,7 +346,7 @@ Prefer this dBm knob (`drv_xpu` register 0, or `set_lbt_th.sh` above) to tune CC
 
 ## Statistics via sysfs
 
-Beyond registers, the driver exposes per-packet counters through sysfs, wrapped by scripts. Enable, read, clear:
+The driver also exposes per-packet counters through sysfs. Use these scripts to enable, read, and clear them:
 
 ```bash
 ./stat_enable.sh                 # turn on driver statistics

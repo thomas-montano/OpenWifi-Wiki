@@ -13,8 +13,8 @@ For the exact toolchain, kernel, and image versions these builds expect, see [Ve
 ## Xilinx toolchain (Vivado + Vitis)
 
 - **Vivado 2022.2 with Vitis** installed (you need `.../Vitis`, *not* `Vitis_HLS`). If Vitis is missing, add it via *Xilinx Design Tools → Add Design Tools for Devices 2022.2*.
-- The driver is cross-compiled with the kernel toolchain, so a Vivado/Vitis install is required for **both** driver and FPGA builds.
-- The installer download is tens of GB and requires a free AMD/Xilinx account from the Xilinx website.
+- The driver is cross-compiled with the kernel toolchain, so a Vivado and Vitis install is required for **both** driver and FPGA builds.
+- The installer download is tens of GB and requires a free AMD (Xilinx) account from the Xilinx website.
 
 !!! note "Which Vivado version?"
     The *software* side of openwifi historically referenced Vivado 2021.1, while the current openwifi-hw build targets 2022.2. Match the version the repo README states at the time you build.
@@ -24,18 +24,18 @@ For the exact toolchain, kernel, and image versions these builds expect, see [Ve
 - Ubuntu 18.04/20.04/22.04 LTS are the tested versions. Ubuntu 24.04 is untested but works with the `libtinfo5` workaround below.
 - **`libtinfo5`** for Vivado. On Ubuntu 24.04 the default `libtinfo6` won't do, so install `libtinfo5` manually:
 
-  ```bash
-  wget http://archive.ubuntu.com/ubuntu/pool/main/n/ncurses/libtinfo5_6.1-1ubuntu1.18.04.1_amd64.deb
-  sudo dpkg -i ./libtinfo5_6.1-1ubuntu1.18.04.1_amd64.deb
-  ```
+    ```bash
+    wget http://archive.ubuntu.com/ubuntu/pool/main/n/ncurses/libtinfo5_6.1-1ubuntu1.18.04.1_amd64.deb
+    sudo dpkg -i ./libtinfo5_6.1-1ubuntu1.18.04.1_amd64.deb
+    ```
 
-- Windows is not supported as a build host: see [Windows for development?](FAQ-and-Resources.md#windows-for-development) in the FAQ.
+- Windows is not supported as a build host. See [Can you develop on Windows?](FAQ-and-Resources.md#can-you-develop-on-windows) in the FAQ.
 
-- Driver / kernel build packages:
+- Driver and kernel build packages:
 
-  ```bash
-  sudo apt install flex bison libssl-dev device-tree-compiler u-boot-tools -y
-  ```
+    ```bash
+    sudo apt install flex bison libssl-dev device-tree-compiler u-boot-tools -y
+    ```
 
 ## Environment variables
 

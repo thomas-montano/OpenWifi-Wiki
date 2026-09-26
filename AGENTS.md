@@ -49,7 +49,7 @@ awk '/^[ \t]*```/{ if (inblock) { inblock=0; next } inblock=1; if ($0 ~ /^[ \t]*
 
 Any output is a failure. Each printed fence needs a language tag.
 
-Before reporting a docs change as done, grep the changed files for the punctuation and phrasing the hard rules ban. That means em dashes, semicolons in prose, and the machine-written phrases listed below. Vale and the strict build catch some of this, but not all of it, so check directly rather than relying on either alone.
+Before reporting a docs change as done, grep the changed files for the punctuation and phrasing the hard rules ban. That means em dashes, semicolons in prose, and the machine-written phrases listed below. Vale and the strict build catch some of this, but not all of it, so check directly rather than relying on either alone. Reread changed paragraphs and sections for awkward sentence length, repetitive openings, colon usage, and unclear slash notation.
 
 On the maintainer's Windows machine, MkDocs is not on `PATH` and `python -m mkdocs` resolves to the wrong interpreter. Use the `py` launcher there:
 
@@ -83,7 +83,7 @@ Three GitHub Actions workflows in `.github/workflows/`:
 
 ## Content conventions
 
-These rules are not stylistic preferences. Follow them exactly. They are enforced by review, and several exist because past output violated them.
+Follow the hard rules and explicit formatting and naming requirements exactly. Use the sentence construction guidance to improve clarity, not as a template for every paragraph. Never change a technical claim or remove a fact as part of a style edit.
 
 ### Hard rules
 
@@ -97,14 +97,27 @@ These rules are not stylistic preferences. Follow them exactly. They are enforce
   - "not X but Y" or "X is not Y. It is Z." fragment pairs.
   - Triadic lists used for cadence rather than content.
   - "leverage", "seamless", "delve", "testament", "underscore", and "robust" when they are doing praise rather than naming a technical property.
-- **Colons introduce a list, a code block, or a label, never a narrative explanation.** A colon is fine in each of these cases.
-  - Ahead of a genuine bulleted or numbered list.
-  - Ahead of a fenced code block.
-  - As a label introducing its own description, in a bullet, a table cell, or a bold run-in, such as `` `mkdocs.yml`: the single source of truth `` or **Branches:**.
-  - Ahead of a short, comma-separated set of examples.
-  - Not as a substitute for "which is", "since", or a new sentence, when explaining a claim in running prose. "The build fails for one reason: a missing anchor." becomes "The build fails because of a missing anchor."
-- **Expand shorthand slashes in prose.** "read/write" becomes "read and write", "pass/fail" becomes "pass or fail". Slashes stay in file paths, code, and genuine either-or notation like `A/B` in a upstream tool's own usage string.
-- **No sentence over 30 words.** Count as you write. If a sentence runs long, split it at a natural break rather than adding a comma clause. This is the same instinct as the semicolon rule, one idea per sentence, extended to length rather than punctuation.
+  - "by construction", "the central design idea", and "the key insight".
+  - Empty justification tails, such as "This is what makes X" or "exactly the kind of X". A concise causal clause can stay in the same sentence when it helps readers follow the reasoning.
+  - Conversational set-ups, such as "Here's how", "The short version", "In short", and "In other words".
+- **Expand ambiguous shorthand slashes in running prose.** Choose "and" or "or" according to the meaning. For example, "read/write" becomes "read and write", "pass/fail" becomes "pass or fail", and "2.4/5 GHz" becomes "2.4 and 5 GHz". A slash can stay in a compact table heading or cell when it clearly labels distinct measurements, such as "RX/TX ACK gaps". Slashes also stay in file paths, code, standard technical names (CSMA/CA, RTS/CTS, I/Q, I/O, 802.11a/g/n), upstream product names (FMCOMMS2/3/4, ADRV1CRR-BOB/FMC), and an upstream tool's own usage string.
+- **Write ranges with "to" in running prose.** "registers 26 to 31", "40 to 50 Mbps". En dash ranges are fine in tables and headings.
+
+### Sentence construction and rhythm
+
+The target is plain technical English of the kind found in a well-kept engineering wiki or a conference paper. Use these guidelines with judgment. Preserve every fact, number, unit, link, and defined term when you apply them.
+
+- **Sentence length.** Aim for sentences under 30 words, but keep related ideas together when a slightly longer sentence reads more clearly. Split sentences that make the reader track several separate claims.
+- **Direct sentences.** Make the subject and action clear. Use a subordinate clause or appositive when it expresses a relationship more naturally than two short sentences.
+- **Paragraph shape.** Lead with the main point, then add the context or consequence the reader needs. Do not add a concluding sentence merely to complete a pattern. Keep paragraphs short to medium.
+- **Colons.** Use a colon when it makes a short explanation, inline list, code block, or label easier to read. A heading may use one when it clarifies the relationship between its parts. Do not replace a clear causal sentence with a colon solely for emphasis. Keep a short inline series in one sentence when bullets would add clutter. If you change a heading, update links to its anchor and run the strict build.
+- **No hype.** "significant" is fine for a measured effect. Marketing register is not.
+- **Mirrored definitions.** Avoid repeating the same sentence pattern across adjacent explanations when it becomes distracting. Keep parallel phrasing in tables and reference lists when it helps readers compare entries.
+- **Long `and` chains.** Split separate claims that pile up in one sentence. Related actions by the same subject can share a sentence. Mix short sentences with longer ones without making the passage choppy.
+- **Announced enumerations.** Use "first" and "second" when they help readers follow a longer explanation. Skip the announcement when the points are already easy to follow.
+- **Rhetorical tricolons.** A three-item technical list is fine when all three items are needed. When three-part lists recur mainly for cadence, keep two items and move the third into the next sentence, or change the grammatical shape.
+- **Sentence openings.** Avoid chains of sentences starting with "It", "This", "This allows", or "For this reason". Name the subject, combine related actions, or change the order when that improves the flow. Do not replace one repeated phrase with another.
+- **Read around every change.** Reread the full paragraph and section after editing. Check the flow, repeated sentence patterns, and whether every technical relationship still means the same thing. Review factual updates separately from style changes.
 
 ### Voice, naming, and formatting
 
@@ -117,6 +130,7 @@ These rules are not stylistic preferences. Follow them exactly. They are enforce
 - Prefer tables for anything with more than two parallel facts (register maps, per-board differences, version pins).
 - Admonitions use the Material syntax with a quoted title. Only these four types are in use: `!!! note`, `!!! warning`, `!!! tip`, `!!! info`.
 - Code blocks always carry a language tag (` ```bash `, ` ```c `, ` ```verilog `, ` ```console `).
+- **Indent everything under a list item by 4 spaces.** This covers paragraphs, code fences, tables, nested lists, and admonitions. Python-Markdown ends the list at a 3-space indent. The numbering then restarts and the content renders outside the list, and the strict build does not warn about it.
 - **Bash code blocks must be paste-safe.** Every line inside a ` ```bash ` block is either a command that actually runs or a `#` comment. Never leave bare explanatory prose, a placeholder, or a line of expected output un-commented, so the reader can select the whole block and paste it straight into a terminal. A block that is mostly sample output belongs in a ` ```console ` block instead.
 - Diagrams are hand-written inline SVG, theme-aware via `currentColor` and `var(--md-default-fg-color)`, wrapped in `<figure>` with a `<figcaption>`. Never add an external image or script dependency. Raster diagrams copied from upstream go in `docs/assets/img/`.
 - Internal links are **relative** and include the `.md` extension: `[Supported Boards](Supported-Boards.md)`. Absolute links like `/Software/` break under the `/OpenWifi-Wiki/` subpath and the build warns about them.

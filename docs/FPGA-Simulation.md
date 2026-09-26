@@ -1,6 +1,6 @@
 # FPGA Simulation and Testbenches
 
-Simulation is the fastest way to develop and debug openwifi's FPGA logic without a board. You feed a testbench a recorded or generated IQ file, run it in Vivado (or Icarus Verilog), and inspect the receiver's internal signals in the waveform view or in the text files the testbench dumps. Every design change can be checked here before you spend an hour synthesizing a bitstream.
+Simulation is the fastest way to develop and debug openwifi's FPGA logic without a board. Feed a recorded or generated IQ file to a testbench, run it in Vivado or Icarus Verilog, then inspect the receiver's signals in the waveform view or dumped text files. You can check each design change before spending an hour synthesizing a bitstream.
 
 This page is the deep reference for that environment. For the surrounding build, deploy, and port workflow, see [FPGA Development](FPGA-Development.md). For what each core does, see [FPGA IP Cores](FPGA-IP-Cores.md).
 
@@ -28,22 +28,22 @@ This is the main simulation environment. `dot11_tb` instantiates the `dot11` rec
 
 1. Create the IP's Vivado project:
 
-   ```bash
-   cd ip/openofdm_rx
-   ../create_vivado_proj.sh $XILINX_DIR openofdm_rx.tcl
-   ```
+    ```bash
+    cd ip/openofdm_rx
+    ../create_vivado_proj.sh $XILINX_DIR openofdm_rx.tcl
+    ```
 
 2. In Vivado, open *Sources → Simulation Sources → sim_1 → `dot11_tb`*.
 3. Run *SIMULATION → Run Simulation → Run Behavioral Simulation*. The first run is slow because every sub-IP compiles once. Later runs are fast.
 4. Press **Run All (F3)** to run to completion.
 5. After editing a design file, use **Relaunch Simulation** rather than recreating the project.
 
-A passing run ends with one line per frame in `fcs_out.txt` (the sample count followed by the `fcs_ok` flag), and `byte_out.txt` holds the decoded bytes to compare against the known frame. The first run can take several minutes while every sub-IP compiles.
+A passing run ends with one line per frame in `fcs_out.txt`, giving the sample count and the `fcs_ok` flag. `byte_out.txt` holds the decoded bytes to compare against the known frame. The first run can take several minutes while every sub-IP compiles.
 
 !!! tip "Icarus Verilog as a lighter alternative"
     The openofdm repo also builds with [Icarus Verilog](http://iverilog.icarus.com/) and [GtkWave](http://gtkwave.sourceforge.net/) instead of Vivado. A `Makefile` lives in [`openofdm/verilog/`](https://github.com/open-sdr/openofdm/tree/dot11zynq/verilog): `make` compiles the design and runs `dot11_tb` under `vvp`, and `make clean` removes the outputs. This is handy on a machine without a Vivado install, though the Xilinx primitives (the Viterbi decoder) still need the Vivado simulation libraries, which you generate with Vivado's `compile_simlib`.
 
-### The IQ input: what you feed
+### The IQ input file
 
 The receiver expects **20 MSPS** baseband IQ, 16 bits each. The testbench reads its samples from a text file named by the `` `SAMPLE_FILE `` macro in [`verilog/openofdm_rx_pre_def.v`](https://github.com/open-sdr/openofdm/tree/dot11zynq/verilog). Change that macro to point at a different capture, then relaunch.
 
@@ -55,7 +55,7 @@ Each line of the file is three integers: `I`, `Q`, and a dummy RSSI value.
 88 -19 0
 ```
 
-`dot11_tb` reads one line per 20 MHz tick, packs it into `sample_in[31:16]` (I) and `sample_in[15:0]` (Q), and pulses `sample_in_strobe` for one cycle. The baseband clock is selectable in the testbench (`CLK_SPEED_100M`, `200M`, `240M`, `400M`), but the sample rate stays 20 MSPS regardless: the harness just spaces the strobes further apart at a higher clock.
+`dot11_tb` reads one line per 20 MHz tick, packs it into `sample_in[31:16]` (I) and `sample_in[15:0]` (Q), and pulses `sample_in_strobe` for one cycle. The baseband clock is selectable in the testbench (`CLK_SPEED_100M`, `200M`, `240M`, `400M`), but the sample rate stays at 20 MSPS. At a higher clock, the harness spaces the strobes further apart.
 
 <figure>
 <svg viewBox="0 0 900 330" role="img" aria-label="The dot11_tb simulation data flow. A test vector text file of I, Q, and RSSI values at 20 MSPS feeds the dot11_tb harness, which packs each line into sample_in and pulses sample_in_strobe into the dot11 receiver device under test. The receiver runs sync, equalization, demod, and Viterbi. Its results go two ways: to the waveform view, where you watch state, preamble_detected, pkt_len, fcs_ok, and byte_out, and to dumped text files such as byte_out.txt, equalizer_out.txt, and fcs_out.txt, which a Python reference decoder can then diff against." style="width:100%;height:auto;max-width:1000px;font-family:inherit;font-size:13px">
@@ -125,7 +125,7 @@ Each line of the file is three integers: `I`, `Q`, and a dummy RSSI value.
 |---|---|
 | `short_preamble_detected`, `long_preamble_detected` | Packet detection and coarse/fine timing found the preamble. If these never fire, the problem is sync or signal level, not decoding. |
 | `state` | The receiver FSM position. Watch it step through detection, channel estimation, SIGNAL parsing, and payload demod. A stuck `state` localizes the fault to one stage. |
-| `pkt_header_valid`, `pkt_len`, `pkt_rate` | The SIGNAL/HT-SIG field parsed and gave a length and rate. A wrong `pkt_len` here means SIGNAL decoding, not payload decoding, is off. |
+| `pkt_header_valid`, `pkt_len`, `pkt_rate` | The SIGNAL or HT-SIG field parsed and gave a length and rate. A wrong `pkt_len` here means SIGNAL decoding, not payload decoding, is off. |
 | `demod_is_ongoing` | Payload demodulation is running. |
 | `byte_out`, `byte_out_strobe` | The decoded MPDU bytes, one at a time. Compare against the known frame. |
 | `fcs_ok`, `fcs_out_strobe` | The CRC check passed. This is the end-to-end pass/fail for the whole receive chain. |
@@ -166,7 +166,7 @@ For regression-style runs you do not need the GUI. The openofdm repo has three h
 | [`openofdm_rx_sim_iq_file_batch.tcl`](https://github.com/open-sdr/openofdm/blob/dot11zynq/openofdm_rx_sim_iq_file_batch.tcl) | Loops the single-file run over many IQ files |
 | [`openofdm_rx_side_ch_sim_ultra_scale.tcl`](https://github.com/open-sdr/openofdm/blob/dot11zynq/openofdm_rx_side_ch_sim_ultra_scale.tcl) | Simulates the receiver together with `side_ch` on UltraScale parts |
 
-`openofdm_rx_sim_iq_file.tcl` shows the pattern the others follow. It writes the chosen file into the `` `SAMPLE_FILE `` macro, computes the run length from the file (`lines / 20` microseconds by Tcl integer division, since the input is 20 MSPS), runs the simulation, and copies every dumped `.txt` into a results directory named after the input file. That last step is what makes batch runs comparable: each input keeps its own set of dumps.
+`openofdm_rx_sim_iq_file.tcl` shows the pattern the others follow. It writes the chosen file into the `` `SAMPLE_FILE `` macro and computes the run length from the file (`lines / 20` microseconds by Tcl integer division, since the input is 20 MSPS). It then runs the simulation and copies every dumped `.txt` into a results directory named after the input file. Because each input keeps its own set of dumps, batch runs stay comparable.
 
 ## The transmitter testbench (`dot11_tx_tb`)
 
@@ -175,7 +175,7 @@ The transmit side has its own testbench, [`dot11_tx_tb.v`](https://github.com/op
 - `tx_intf.mem`: the base TX interface memory image.
 - `ht_tx_intf_mem_mcs7_gi1_aggr0_byte100.mem` and `..._byte8176.mem`: 802.11n HT frames at MCS7, short guard interval, for a 100-byte and an 8176-byte payload.
 
-Simulate it the same way as the receiver: create the `openofdm_tx` project, select `dot11_tx_tb` as the simulation top, and run behavioral simulation. The testbench writes each output sample as one `I Q` line to `dot11_tx.txt`. Because the transmitter is deterministic, that output can be converted into a `dot11_tb` sample file (append the dummy RSSI column the receiver format expects) and replayed through the receiver. This is the [self-loopback test](Research-Features.md#self-loopback-testing) you run on hardware, done entirely in simulation.
+Simulate it the same way as the receiver. Create the `openofdm_tx` project, select `dot11_tx_tb` as the simulation top, and run behavioral simulation. The testbench writes each output sample as one `I Q` line to `dot11_tx.txt`. Because the transmitter is deterministic, that output can be converted into a `dot11_tb` sample file (append the dummy RSSI column the receiver format expects) and replayed through the receiver. This is the [self-loopback test](Research-Features.md#self-loopback-testing) you run on hardware, done entirely in simulation.
 
 ## Block-level unit tests
 
@@ -196,7 +196,7 @@ vivado -mode batch -source mv_avg_tb.tcl
 # open ./mv_avg_tb in the Vivado GUI and Run Behavioral Simulation
 ```
 
-The `mv_avg` test is the clearest example of the file-vector pattern: `test_data_in_out.m` generates `data_in.txt` and the expected output in MATLAB, the testbench reads `data_in.txt`, and you compare the Verilog result against the MATLAB reference. That is the same read-a-vector, dump-a-result, diff-against-a-golden-model loop the full `dot11_tb` uses, shrunk to one block.
+The `mv_avg` test shows the file-vector pattern in one block. `test_data_in_out.m` generates `data_in.txt` and the expected output in MATLAB. The testbench reads `data_in.txt`, and you compare its Verilog result with the MATLAB reference. The full `dot11_tb` uses the same read, dump, and compare loop across the receiver.
 
 ## Conditional compilation in simulation
 
@@ -204,4 +204,4 @@ The `mv_avg` test is the clearest example of the file-vector pattern: `test_data
 
 ## From simulation to hardware
 
-Simulation and on-board debugging cover different failures. Use the testbench to verify logic and datapath correctness against known vectors, where you have full visibility and a golden reference. Use the Xilinx [ILA](FPGA-Development.md#debugging-on-hardware) on the running board to catch the things simulation cannot show: real RF, real timing against the AD9361, and the interaction between the FPGA and the Linux driver. A common workflow is to reproduce a hardware bug in simulation by capturing the offending IQ with `side_ch` (see [Research Features](Research-Features.md)), saving it in the `dot11_tb` sample-file format, and replaying it through the receiver testbench.
+Simulation and on-board debugging cover different failures. Use the testbench to verify logic and datapath correctness against known vectors, where you have full visibility and a golden reference. Use the Xilinx [ILA](FPGA-Development.md#debugging-on-hardware) on the running board to examine real RF, AD9361 timing, and interactions between the FPGA and Linux driver. To reproduce a hardware bug in simulation, capture the offending IQ with `side_ch` (see [Research Features](Research-Features.md)), save it in the `dot11_tb` sample-file format, and replay it through the receiver testbench.

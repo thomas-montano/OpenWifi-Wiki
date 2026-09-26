@@ -25,7 +25,7 @@ openwifi is [split across several repos](Repositories.md) by toolchain, so the f
 
 | Your change | Repository |
 |---|---|
-| Driver, `sdrctl`/user-space tools, scripts, boot files, docs | [openwifi](https://github.com/open-sdr/openwifi) |
+| Driver, `sdrctl` and other user-space tools, scripts, boot files, docs | [openwifi](https://github.com/open-sdr/openwifi) |
 | The PHY or real-time MAC (Verilog IP cores), board Vivado projects | [openwifi-hw](https://github.com/open-sdr/openwifi-hw) |
 | A prebuilt bitstream for a board | [openwifi-hw-img](https://github.com/open-sdr/openwifi-hw-img) |
 | The OFDM receiver internals | [openofdm](https://github.com/open-sdr/openofdm) (`dot11zynq` branch) |

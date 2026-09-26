@@ -17,6 +17,9 @@ radiotap
 
 # Vendors, products, and organizations
 Xilinx('s)?
+Avnet
+Digilent
+Ettus
 Vivado
 Vitis
 Buildroot
@@ -29,6 +32,7 @@ imec
 NLnet
 Wireshark
 iperf
+arXiv
 
 # Boards and platforms
 zynq(mp)?
@@ -55,6 +59,8 @@ Mbps
 Msps
 interframe
 backoff
+CWm(in|ax)
+Fmax
 MPDUs?
 RUs?
 ACKs?
@@ -86,6 +92,7 @@ PDFs?
 LEDs?
 
 # Software and Linux terms
+tcpdump
 configs?
 repos?('s)?
 dev

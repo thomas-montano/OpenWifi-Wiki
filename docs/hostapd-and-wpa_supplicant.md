@@ -1,6 +1,6 @@
 # hostapd and wpa_supplicant
 
-openwifi runs **stock** `hostapd` and `wpa_supplicant`, the same binaries Ubuntu or Debian install for any Wi-Fi card. Nothing in them knows that the radio underneath is an FPGA. That is the point of the design, and it is also the thing that trips people up: when a link fails to come up, it is rarely obvious whether the daemon, the kernel, the driver, or the PHY is at fault.
+openwifi runs **stock** `hostapd` and `wpa_supplicant`, the same binaries Ubuntu or Debian install for any Wi-Fi card. Neither daemon knows that the radio underneath is an FPGA. When a link fails, you may need to check the daemon, kernel, driver, and PHY to find the cause.
 
 For the mode-by-mode command sequences, see [Operating Modes](Operating-Modes.md).
 
@@ -84,7 +84,7 @@ Four consequences follow from this.
 
 **The daemons cannot see or set openwifi's own settings.** TX power, RX gain, CCA threshold, ACK behavior, and the FPGA registers are reached through a completely separate channel, `sdrctl`, which uses an nl80211 *testmode* command. See [sdrctl and Runtime Control](sdrctl-and-Runtime-Control.md). So a config file never contains an openwifi register setting, and `sdrctl` never changes an SSID.
 
-**hostapd does not transmit beacons.** It hands `mac80211` the beacon contents, and `mac80211` plus the driver put a beacon on the air on a timer. That is why the beacon check in the [AP walkthrough](Operating-Modes.md#access-point) watches the TX interrupt count in `/proc/interrupts` rather than anything hostapd prints.
+**hostapd does not transmit beacons.** It hands `mac80211` the beacon contents, and `mac80211` plus the driver put a beacon on the air on a timer. The [AP walkthrough](Operating-Modes.md#access-point) therefore checks the TX interrupt count in `/proc/interrupts` rather than hostapd output.
 
 **Encryption runs in software.** The driver implements no key-offload callback (there is no `set_key` in the [callback table](Driver-Architecture.md#the-mac80211-callback-surface)), so `mac80211` does CCMP on the ARM cores. WPA2 works normally, but it costs processor time, so an encrypted link doesn't reach the throughput of an open one. When you are measuring peak throughput, test with security disabled.
 
@@ -127,7 +127,7 @@ cd openwifi/user_space
 ./build_wpa_supplicant_wo11b.sh
 ```
 
-Staying in 5 GHz avoids the whole problem, which is why the demo defaults to a 5 GHz channel. The full explanation is in [About 802.11b](Operating-Modes.md#about-80211b).
+Staying in 5 GHz avoids the problem completely, so the demo defaults to a 5 GHz channel. The full explanation is in [About 802.11b](Operating-Modes.md#about-80211b).
 
 **Forcing legacy 802.11a/g.** Use `fosdem-11ag.sh`, or set `ieee80211n=0` in the hostapd config yourself. Useful when you are trying to tell an 11n problem apart from an RF problem. The 11n side is covered in [Wi-Fi 4 and Wi-Fi 6 Features](Wi-Fi-4-and-Wi-Fi-6.md).
 
@@ -146,10 +146,10 @@ Read the output against these three cases.
 
 - **Nothing appears in a scan.** The daemon is fine and the problem is below it. Either the AP is not beaconing, or the receiver is not hearing it. Check the AP's TX interrupt count, then antennas and distance, then [receiver sensitivity and gain](sdrctl-and-Runtime-Control.md#rx-gain).
 - **Authentication or association is attempted and times out.** Frames are going out but nothing usable is coming back. In 2.4 GHz, suspect the 11b problem first. Otherwise treat it as a link-quality problem.
-- **Association completes and then the link drops or gives no IP.** The daemons did their job. Go to [Client and link problems](Troubleshooting.md#client-link-problems) in Troubleshooting, starting with the DHCP server.
+- **Association completes and then the link drops or gives no IP.** The daemons did their job. Go to [Client and link problems](Troubleshooting.md#client-and-link-problems) in Troubleshooting, starting with the DHCP server.
 
 If a config file sets `ctrl_interface`, you can also attach `wpa_cli` or `hostapd_cli` to a running daemon to inspect state and issue commands without restarting it. For example, `wpa_cli -i sdr0 status` prints the association state of a running supplicant.
 
-Two openwifi-specific traps: reloading the driver destroys and recreates `sdr0`, so any daemon that was running is now attached to nothing and has to be restarted, as noted in the [driver iteration loop](Software-Development-Workflow.md#the-driver-iteration-loop). And NetworkManager fights `wpa_supplicant` for control of the interface, which is why the client walkthrough starts with `service network-manager stop`.
+Reloading the driver destroys and recreates `sdr0`, so any running daemon is left attached to nothing and has to be restarted (see the [driver iteration loop](Software-Development-Workflow.md#the-driver-iteration-loop)). NetworkManager also fights `wpa_supplicant` for control of the interface, so the client walkthrough starts with `service network-manager stop`.
 
 For anything below the daemon, the driver's own logging is on the [Troubleshooting](Troubleshooting.md#driver-dmesg-logging) page.

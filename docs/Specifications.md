@@ -1,8 +1,8 @@
 # Specifications (Datasheet)
 
-This page is a **datasheet-style reference** for openwifi: the numbers you need to judge whether it fits your radio, FPGA, and timing budget, collected in one place.
+This page is a **datasheet-style reference** for openwifi. It collects the numbers you need to judge whether openwifi fits your radio, FPGA, and timing budget.
 
-Every figure carries a **footnote** pointing to its source so you can check it. Two conventions to note:
+Every figure carries a **footnote** that points to its source so you can check it.
 
 - **The repository is authoritative.** Where a number comes from openwifi's own code, docs, or release notes, the footnote links to it. If a build script or a repo README states something different from this page, trust the repo and please fix this page.
 - **Standard-derived values are marked** with the `[^std]` footnote, which stands for the IEEE 802.11 standard. These follow from the standard and the PHY parameters openwifi implements (for example 20 MHz OFDM), not from an openwifi-specific measurement.
@@ -14,12 +14,12 @@ Every figure carries a **footnote** pointing to its source so you can check it. 
 
 | Parameter | Value |
 |---|---|
-| Wi-Fi standards | 802.11a / 802.11g / 802.11n (Wi-Fi 4), 20 MHz, single spatial stream[^readme] |
-| Channel bandwidth | 20 MHz (also 10 MHz for 802.11p, 2 MHz for 802.11ah-style sub-GHz)[^readme] |
-| RF tuning range | 70 MHz–6 GHz (Analog Devices AD9361/AD9364 front end)[^faq] |
+| Wi-Fi standards | 802.11a, 802.11g, and 802.11n (Wi-Fi 4), 20 MHz, single spatial stream[^readme] |
+| Channel bandwidth | 20 MHz. Upstream also lists 10 MHz for 802.11p and 2 MHz for 802.11ah-style sub-GHz work, but documents no procedure for them (see the [FAQ](FAQ-and-Resources.md#can-it-work-outside-normal-wi-fi-frequencies)).[^readme] |
+| RF tuning range | 70 MHz–6 GHz (Analog Devices AD9361 or AD9364 front end)[^faq] |
 | Baseband transceiver sample rate | 20 Msps (20 MHz mode)[^docreadme] |
-| AD9361 ↔ FPGA sample rate | 40 Msps (decimated/interpolated to 20 Msps in the FPGA)[^docreadme] |
-| FPGA baseband clock | 100 MHz default (up to 200/240 MHz on high-end boards)[^tcl][^boards] |
+| AD9361 ↔ FPGA sample rate | 40 Msps (decimated and interpolated to 20 Msps in the FPGA)[^docreadme] |
+| FPGA baseband clock | 100 MHz default (up to 200 or 240 MHz on high-end boards)[^tcl][^boards] |
 | Max PHY rate (open source) | 72.2 Mbps (MCS7, 400 ns short guard interval, theoretical)[^11n] |
 | Measured throughput (iperf) | TCP 40–50 Mbps, UDP ~50 Mbps[^readme] |
 | TX EVM | −38 dB[^readme] |
@@ -33,7 +33,7 @@ openwifi implements an OFDM PHY equivalent to 802.11a/g and the single-stream, 2
 
 | Parameter | Value |
 |---|---|
-| Modulation | OFDM (BPSK / QPSK / 16-QAM / 64-QAM)[^std] |
+| Modulation | OFDM (BPSK, QPSK, 16-QAM, 64-QAM)[^std] |
 | FFT size | 64[^std] |
 | Data subcarriers | 52 (802.11n HT), 48 (802.11a/g legacy)[^11n] |
 | Channel bandwidth | 20 MHz (16.6 MHz occupied)[^std] |
@@ -43,47 +43,47 @@ openwifi implements an OFDM PHY equivalent to 802.11a/g and the single-stream, 2
 | Spatial streams | 1 (SISO), MIMO not supported in open source[^11n] |
 
 !!! note "802.11b is not supported"
-    openwifi is OFDM-only. The DSSS/CCK rates of 802.11b are not implemented. An 802.11b `1 Mbps` rate request is converted to `6 Mbps` OFDM.[^docreadme] This is the usual reason a 2.4 GHz client fails to associate. See [Operating Modes → About 802.11b](Operating-Modes.md#about-80211b).
+    openwifi is OFDM-only. The DSSS and CCK rates of 802.11b are not implemented. An 802.11b `1 Mbps` rate request is converted to `6 Mbps` OFDM.[^docreadme] This is the usual reason a 2.4 GHz client fails to associate. See [Operating Modes → About 802.11b](Operating-Modes.md#about-80211b).
 
 ### Data rates
 
 | Mode | Rates | Max (theoretical) |
 |---|---|---|
 | 802.11a/g (legacy OFDM) | 6, 9, 12, 18, 24, 36, 48, 54 Mbps | 54 Mbps[^std] |
-| 802.11n HT (single stream, 20 MHz) | MCS 0–7 | 65 Mbps (800 ns GI) / **72.2 Mbps** (400 ns short GI)[^11n] |
+| 802.11n HT (single stream, 20 MHz) | MCS 0–7 | 65 Mbps (800 ns GI) or **72.2 Mbps** (400 ns short GI)[^11n] |
 
 ## RF front end
 
-The RF characteristics come from the **Analog Devices AD9361/AD9364** agile transceiver rather than from openwifi itself. openwifi controls it in real time over an FPGA SPI interface. Consult the AD9361 datasheet for full RF specs. The openwifi-relevant facts are:
+The RF characteristics come from the **Analog Devices AD9361 or AD9364** agile transceiver rather than from openwifi itself. openwifi controls it in real time over an FPGA SPI interface. Consult the AD9361 datasheet for full RF specs. The openwifi-relevant facts are:
 
 | Parameter | Value |
 |---|---|
 | Tuning range | 70 MHz–6 GHz[^faq] |
 | Duplex mode | FDD with the same TX and RX frequency. The TX LO and RF switch turn on only for the duration of a packet, so the receiver never hears its own transmitter[^docreadme] |
 | Antenna configurations | 1×1 typical, some boards (AD9361) 2×2-capable[^boards] |
-| RF/baseband clock coupling | Baseband clock derived from the AD9361 sample clock, so RF and baseband never drift apart[^docreadme] |
+| RF and baseband clock coupling | Baseband clock derived from the AD9361 sample clock, so RF and baseband never drift apart[^docreadme] |
 
 !!! warning "Per-board RF caveats"
-    RF performance is board-specific. The ADRV9361-Z7035 has **very low TX power at 5 GHz**, and the stock ANTSDR RF switch **only passes 3–6 GHz**. See [Supported Boards](Supported-Boards.md#board-bring-up-quirks-worth-knowing-up-front).
+    RF performance is board-specific. The ADRV9361-Z7035 has **very low TX power at 5 GHz**, and the stock ANTSDR RF switch **only passes 3 to 6 GHz**. See [Supported Boards](Supported-Boards.md#board-bring-up-quirks-worth-knowing-up-front).
 
 ## MAC-layer timing
 
-openwifi's real-time "low MAC" (the `xpu` core) runs the DCF (CSMA/CA) state machine in FPGA fabric, which is what lets it meet 802.11 interframe timing that a software MAC cannot. The timing values are **configurable** through the `xpu` register `slv_reg9` (bit-fields for PHY-RX delay, SIFS, slot time, OFDM symbol time, and preamble+SIG time, in µs). The driver programs standard values per band automatically.[^docreadme]
+openwifi's real-time "low MAC" (the `xpu` core) runs the DCF (CSMA/CA) state machine in FPGA fabric, where it can meet interframe timing that a software MAC cannot. The timing values are **configurable** through the `xpu` register `slv_reg9` (bit-fields for PHY-RX delay, SIFS, slot time, OFDM symbol time, and preamble+SIG time, in µs). The driver programs standard values per band automatically.[^docreadme]
 
 | Parameter | Value |
 |---|---|
 | TX→RX turnaround | 0.6 µs[^docreadme] |
-| SIFS | **10 µs (2.4 GHz) / 16 µs (5 GHz)**, set per band by the driver[^std][^docreadme] |
-| Slot time | 9 µs (short slot) / 20 µs (long slot)[^std] |
+| SIFS | **10 µs (2.4 GHz) or 16 µs (5 GHz)**, set per band by the driver[^std][^docreadme] |
+| Slot time | 9 µs (short slot) or 20 µs (long slot)[^std] |
 | Hardware ACK generation | Yes (in FPGA)[^readme] |
 | ACK frame duration (@ 6 Mbps) | 44 µs[^sdrc] |
-| Measured ACK gap (RX / TX) | ≈16 µs (320 samples @ 20 Msps) in the app-note IQ capture[^acktiming] |
+| Measured RX/TX ACK gaps | ≈16 µs (320 samples @ 20 Msps) in the app-note IQ capture[^acktiming] |
 | Can be changed or disabled at run time | SIFS, DIFS, EIFS, slot time, CW, NAV, ACK, retransmission[^frequent] |
 
 !!! note "SIFS is band-dependent"
-    Following the 802.11 standard, openwifi's FPGA low-MAC applies **10 µs SIFS in the 2.4 GHz band and 16 µs in 5 GHz**, selected automatically per channel by the driver (`ad9361_rf_set_channel()`).[^docreadme] The feature-list claim of a "10 µs SIFS"[^readme] refers to the tighter 2.4 GHz case, which a software MAC cannot meet.
+    Following the 802.11 standard, openwifi's FPGA low MAC applies **10 µs SIFS in the 2.4 GHz band and 16 µs in 5 GHz**. The driver passes the band to the FPGA for each channel in `ad9361_rf_set_channel()`, and `xpu.v` picks the SIFS from it.[^docreadme] The feature-list claim of a "10 µs SIFS"[^readme] refers to the tighter 2.4 GHz case, which a software MAC cannot meet.
 
-    One implementation caveat: the driver computes the HT `duration_id` *header field* with a fixed SIFS = 16 µs regardless of band,[^sdrc] a conservative choice for that field only. It does not change the actual over-the-air SIFS, which the FPGA enforces per band.
+    The driver computes the HT `duration_id` *header field* with a fixed SIFS of 16 µs regardless of band.[^sdrc] This is a conservative choice for that field only. It does not change the actual over-the-air SIFS, which the FPGA enforces per band.
 
 ## Measured performance
 
@@ -101,15 +101,15 @@ These are openwifi's published bring-up numbers, measured over cable and over th
 
 openwifi is built to fit the **lowest-end supported FPGA (Xilinx Zynq-7020)**, so its resource footprint stays small for a full-stack Wi-Fi PHY+MAC.
 
-| Board / device | LUT | BRAM | DSP | Baseband clock |
+| Board and device | LUT | BRAM | DSP | Baseband clock |
 |---|---|---|---|---|
 | ZedBoard, Zynq-7020 (`xc7z020`, speed grade −1) | ~19k | 76.5 | 121 | 100 MHz[^release] |
 | ZC706, Zynq-7045 (`xc7z045`) | ~21k | 73.5 | 98 | up to 200 MHz[^release] |
 
 !!! note "These are openwifi-core numbers"
-    The utilization above is for the openwifi design. A complete bitstream also includes peripheral logic (DMA, AXI interconnect, the ADI reference design, clocking), so the *total* device utilization is higher. The figures were published in the openwifi release notes. The later releases ship full `report_utilization` archives as release assets (`20220330084857-pre-release-report.zip` for `v1.3.0`, `openwifi-1.5.0-shahecheng-utilization.zip` for `v1.5.0`) if you need the exact breakdown for a specific version.[^release]
+    The utilization above is for the openwifi design. A complete bitstream also includes peripheral logic (DMA, AXI interconnect, the ADI reference design, clocking), so the *total* device utilization is higher. The figures were published in the openwifi release notes. Later releases ship full `report_utilization` archives as release assets, `20220330084857-pre-release-report.zip` for `v1.3.0` and `openwifi-1.5.0-shahecheng-utilization.zip` for `v1.5.0`. Use them if you need the exact breakdown for a specific version.[^release]
 
-Clock / speed grade. The `openofdm_tx` core was optimized so the whole design closes timing at **100 MHz on the low-speed-grade 7020 (−1)**, while higher-grade parts run at 200 MHz (the release notes cite the Zynq-7035 in speed grades −2 and −2L, faster-binned silicon, and the ZC706's Zynq-7045 offers the same 200 MHz option).[^release] The baseband clock is set by `NUM_CLK_PER_US` in `openwifi-hw/boards/openwifi.tcl` (default 100).[^tcl] Per-board options are in [Supported Boards](Supported-Boards.md#the-baseband-clock-per-board).
+**Clock and speed grade.** The `openofdm_tx` core was optimized so the whole design closes timing at **100 MHz on the low-speed-grade 7020 (−1)**. Higher-grade parts run at 200 MHz. The release notes cite the Zynq-7035 in the faster speed grades −2 and −2L. The ZC706's Zynq-7045 offers the same 200 MHz option.[^release] The baseband clock is set by `NUM_CLK_PER_US` in `openwifi-hw/boards/openwifi.tcl` (default 100).[^tcl] Per-board options are in [Supported Boards](Supported-Boards.md#the-baseband-clock-per-board).
 
 ### To generate exact numbers for your build
 
@@ -132,8 +132,8 @@ See [FPGA Development](FPGA-Development.md) for the build flow.
 | 40 MHz bandwidth | Not supported[^11n] |
 | A-MSDU aggregation | Not supported[^faq] |
 | A-MPDU aggregation | Experimental (`./wgd.sh 1`)[^faq] |
-| 802.11b (DSSS/CCK) | Not supported (OFDM only)[^docreadme] |
-| 802.11ax / Wi-Fi 6 and later | Commercial only ([openwifi.tech](https://openwifi.tech))[^readme] |
+| 802.11b (DSSS and CCK) | Not supported (OFDM only)[^docreadme] |
+| 802.11ax (Wi-Fi 6) and later | Commercial only ([openwifi.tech](https://openwifi.tech))[^readme] |
 
 !!! info "Two-hour receiver limit on unlicensed Vivado"
     A bitstream built against the **Xilinx Viterbi decoder evaluation license** halts the receiver after ~2 hours. Reload the FPGA or use a paid license. This is a toolchain licensing limit, not an openwifi design limit. See [Troubleshooting](Troubleshooting.md#reception-dies-after-2-hours).
@@ -141,13 +141,13 @@ See [FPGA Development](FPGA-Development.md) for the build flow.
 ## Sources
 
 [^readme]: openwifi [`README.md`](https://github.com/open-sdr/openwifi/blob/master/README.md): performance summary (throughput, EVM, sensitivity) and feature list.
-[^docreadme]: openwifi [`doc/README.md`](https://github.com/open-sdr/openwifi/blob/master/doc/README.md): the RF/baseband/sampling design (40→20 Msps, 0.6 µs TX/RX turnaround, RF-baseband clock coupling), the `xpu` register descriptions, and the note that `ad9361_rf_set_channel()` configures per-band FPGA settings including SIFS. The band-dependent `sifs = (actual_rx_lo<2500 ? 10 : 16)` line exists in [`driver/sdr.c`](https://github.com/open-sdr/openwifi/blob/master/driver/sdr.c) only as a comment. The active code sets `sifs = 16` unconditionally.
+[^docreadme]: openwifi [`doc/README.md`](https://github.com/open-sdr/openwifi/blob/master/doc/README.md): the RF, baseband, and sampling design (40→20 Msps, 0.6 µs TX-to-RX turnaround, RF-baseband clock coupling) and the `xpu` register descriptions. It also notes that `ad9361_rf_set_channel()` configures per-band FPGA settings, including SIFS. In [`driver/sdr.c`](https://github.com/open-sdr/openwifi/blob/master/driver/sdr.c), the band-dependent `sifs = (actual_rx_lo<2500 ? 10 : 16)` line exists only as a comment. The active code sets `sifs = 16` unconditionally, but only for the `duration_id` calculation. The over-the-air SIFS comes from `xpu.v` in openwifi-hw, which selects 10 or 16 µs from the band.
 [^11n]: openwifi [`doc/app_notes/ieee80211n.md`](https://github.com/open-sdr/openwifi/blob/master/doc/app_notes/ieee80211n.md): subcarriers, coding rates, guard interval, and the 72.2 Mbps theoretical rate, with MIMO and 40 MHz listed as not supported.
 [^acktiming]: openwifi [`doc/app_notes/iq_ack_timing.md`](https://github.com/open-sdr/openwifi/blob/master/doc/app_notes/iq_ack_timing.md): the measured ≈16 µs self-ACK gap (320 samples at 20 Msps).
 [^sdrc]: openwifi [`driver/sdr.c`](https://github.com/open-sdr/openwifi/blob/master/driver/sdr.c): the SIFS and ACK-duration constants used at run time.
-[^frequent]: openwifi [`doc/app_notes/frequent_trick.md`](https://github.com/open-sdr/openwifi/blob/master/doc/app_notes/frequent_trick.md): how SIFS/DIFS/EIFS/slot/CW/NAV/ACK/retransmission are overridden or disabled.
+[^frequent]: openwifi [`doc/app_notes/frequent_trick.md`](https://github.com/open-sdr/openwifi/blob/master/doc/app_notes/frequent_trick.md): how SIFS, DIFS, EIFS, slot time, CW, NAV, ACK, and retransmission are overridden or disabled.
 [^tcl]: openwifi-hw [`boards/openwifi.tcl`](https://github.com/open-sdr/openwifi-hw/blob/master/boards/openwifi.tcl): `NUM_CLK_PER_US`, the FPGA baseband-clock setting (default 100 MHz).
-[^release]: openwifi [GitHub Releases](https://github.com/open-sdr/openwifi/releases): FPGA resource-utilization and Fmax/speed-grade statements (release v1.1.0 "taiyuan," full `report_utilization` archives in v1.3.0 and v1.5.0).
-[^std]: **IEEE 802.11**: values that follow from the standard for a 20 MHz OFDM PHY (FFT size, subcarrier counts, symbol/slot timing, legacy rate set), not from an openwifi-specific measurement.
-[^faq]: openwifi [FAQ & Resources](FAQ-and-Resources.md#frequently-asked-questions): AD9361 70 MHz–6 GHz tuning, A-MPDU/A-MSDU status.
+[^release]: openwifi [GitHub Releases](https://github.com/open-sdr/openwifi/releases): FPGA resource-utilization, Fmax, and speed-grade statements (release v1.1.0 "taiyuan," full `report_utilization` archives in v1.3.0 and v1.5.0).
+[^std]: **IEEE 802.11**: values that follow from the standard for a 20 MHz OFDM PHY (FFT size, subcarrier counts, symbol and slot timing, legacy rate set), not from an openwifi-specific measurement.
+[^faq]: openwifi [FAQ & Resources](FAQ-and-Resources.md#frequently-asked-questions): AD9361 tuning from 70 MHz to 6 GHz, and A-MPDU and A-MSDU status.
 [^boards]: openwifi wiki [Supported Boards](Supported-Boards.md): per-board SoC, antenna capability, and baseband-clock options.

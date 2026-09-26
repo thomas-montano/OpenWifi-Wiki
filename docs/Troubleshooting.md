@@ -16,7 +16,7 @@ On ANTSDR-E200 and similar CH341 adapters, try `sudo apt remove brltty`, since b
 
 Seen on neptunesdr. The flashing tool is suspect, so re-flash with a different one (GNOME Disks, Startup Disk Creator, or win32diskimager).
 
-### ZCU102 kernel panic: "Unable to mount root fs on unknown-block(179,2)"
+### ZCU102 kernel panic, "Unable to mount root fs on unknown-block(179,2)"
 
 The same SD card boots on some ZCU102 units but not others. The SD interface likely needs to run slower. Add these to the mmc/sdhci node of the ZCU102 device tree to cap the speed (see [Boot, Kernel & Device Tree](Boot-Kernel-Device-Tree.md#the-device-tree) for how openwifi builds and edits a board's device tree):
 
@@ -58,7 +58,7 @@ make zynq_adrv9361_defconfig && make -j8 && make u-boot.elf
 
 The 1 GB fix is already in u-boot-xlnx master (`zynq-adrv9361.dts`), so a current checkout needs no source edits.
 
-## Client / link problems
+## Client and link problems
 
 ### Client connects but gets no IP
 
@@ -87,11 +87,11 @@ Set `nameserver 8.8.8.8` in `/etc/resolv.conf` on the board.
 
 ## Hardware quirks
 
-### FMCOMMS board causes a Linux crash (bad/empty EEPROM)
+### FMCOMMS board causes a Linux crash (bad or empty EEPROM)
 
-Some FMCOMMS2/3/4 boards ship with a wrong or empty FRU EEPROM, which crashes some platforms (notably ZCU102). Reprogram it with [fru_tools](https://github.com/analogdevicesinc/fru_tools):
+Some FMCOMMS2/3/4 boards ship with a wrong or empty FRU EEPROM, which crashes some platforms (for example the ZCU102). Reprogram it with [fru_tools](https://github.com/analogdevicesinc/fru_tools):
 
-1. Boot the FMCOMMS board on a platform that *does* come up (for example a 32-bit zed/zc706/zc702).
+1. Boot the FMCOMMS board on a platform that *does* come up (for example a 32-bit `zed_fmcs2`, `zc706_fmcs2`, or `zc702_fmcs2`).
 2. Build `fru_tools`.
 3. Locate the EEPROM with `find /sys -name eeprom`.
 4. Confirm the mismatch with `fru-dump -i <eeprom> -b`.
@@ -105,13 +105,13 @@ Some FMCOMMS2/3/4 boards ship with a wrong or empty FRU EEPROM, which crashes so
 
 ### `Unsupported PRODUCT_ID 0xFF` at AD9361 probe
 
-Same root cause as the [bad/empty EEPROM](#fmcomms-board-causes-a-linux-crash-badempty-eeprom) above, and the same `fru_tools` fix applies.
+Same root cause as the [bad/empty EEPROM](#fmcomms-board-causes-a-linux-crash-bad-or-empty-eeprom) above, and the same `fru_tools` fix applies.
 
 ### `Unsupported PRODUCT_ID 0x00` at AD9361 probe
 
-A different failure from the `0xFF` case above. `0x00` means the AD9361 / FMCOMMS front end **did not power up correctly**: the driver is reading back all-zeros because the chip isn't alive, not because of a bad EEPROM. Check the board's power: that the FMCOMMS card is fully seated, that its supply rails are up, and that the carrier is delivering enough current to the front end.
+A different failure from the `0xFF` case above. `0x00` means the AD9361 or FMCOMMS front end **did not power up correctly**. The driver reads back all zeros because the chip is not responding, and a bad EEPROM is not the cause. Check the board's power. Make sure the FMCOMMS card is fully seated, its supply rails are up, and the carrier delivers enough current to the front end.
 
-### ZCU102 kernel panic (RTC / capacitor & current load)
+### ZCU102 kernel panic (RTC, capacitor, and current load)
 
 Some ZCU102 boards kernel-panic during boot, a failure traced to the RTC capacitor and current load. Tracked in issues [#366](https://github.com/open-sdr/openwifi/issues/366) and [#457](https://github.com/open-sdr/openwifi/issues/457).
 
@@ -149,7 +149,7 @@ ForwardToWall=no
 
 ### `sdrctl` or `side_ch_ctl` segfaults after another update
 
-Both are user-space binaries that stay on the board until you rebuild them, so they can fall out of sync with a driver, kernel, or FPGA update you made afterward. The mismatch can show up as a segmentation fault instead of a clean error, because the tool and the kernel module agree on the layout of the commands passed between them, and that layout is exactly what changes across updates. If a tool that used to work starts crashing with a segmentation fault after you update anything else, rebuild it on the board from your current source tree: [Rebuilding sdrctl](Software-Development-Workflow.md#rebuilding-sdrctl) or [Building side_ch_ctl](side_ch_ctl-and-the-Side-Channel.md#building). Rebuilding both after any driver, kernel, or FPGA change is worth doing on general principle, not just when the crash already happened.
+Both are user-space binaries that stay on the board until you rebuild them. After a driver, kernel, or FPGA update, they may no longer agree with the kernel module's command layout. That mismatch can cause a segmentation fault instead of a clean error. Rebuild both from the current source after an update, even if they have not crashed yet. See [Rebuilding sdrctl](Software-Development-Workflow.md#rebuilding-sdrctl) and [Building side_ch_ctl](side_ch_ctl-and-the-Side-Channel.md#building).
 
 ## Build-host problems
 
@@ -165,11 +165,11 @@ Symlink your installed version (confirm the exact filename first):
 sudo ln -s /usr/lib/x86_64-linux-gnu/libidn.so.12.6.3 /usr/lib/x86_64-linux-gnu/libidn.so.11
 ```
 
-### Vitis HLS: `'2xxxxxxxxx' is an invalid argument`
+### Vitis HLS error `'2xxxxxxxxx' is an invalid argument`
 
 Seen during `create_ip_repo.sh`. Apply [Xilinx article 76960](https://support.xilinx.com/s/article/76960).
 
-### Ubuntu 24: FPGA tools need `libtinfo5`
+### FPGA tools need `libtinfo5` on Ubuntu 24
 
 The default is `libtinfo6`. Install `libtinfo5` manually (see [Environment Setup](Development-Environment-Setup.md#host-os-and-packages)).
 
@@ -177,7 +177,7 @@ The default is `libtinfo6`. Install `libtinfo5` manually (see [Environment Setup
 
 ### No UART output on ZCU102 under OpenWrt
 
-Support was validated only on **ZCU102 HW Rev 1.1**, and even then some 4 GB SODIMM modules fail with the U-Boot SPL bootflow. Known-good module: `MTA8ATF51264HZ-2G6B1`. Known-failing: `MTA4ATF51264HZ-2G6E1`. The fix is to use the **Zynq FSBL instead of U-Boot SPL** (FSBL reads the module's SPD EEPROM and configures DDR correctly), via `build_zynqmp_boot_bin.sh` in the openwifi repo's [`kernel_boot/`](https://github.com/open-sdr/openwifi/tree/master/kernel_boot) directory or by generating `boot.bin` yourself with OpenWrt-built components. Full analysis is in the [known-issue note](https://github.com/open-sdr/openwifi/blob/master/doc/known_issue/notter.md#no-uart-output-on-zcu102).
+Support was validated only on **ZCU102 HW Rev 1.1**, and even then some 4 GB SODIMM modules fail with the U-Boot SPL bootflow. Known-good module: `MTA8ATF51264HZ-2G6B1`. Known-failing: `MTA4ATF51264HZ-2G6E1`. The fix is to use the **Zynq FSBL instead of U-Boot SPL**, since the FSBL reads the module's SPD EEPROM and configures DDR correctly. Build it with `build_zynqmp_boot_bin.sh` in the openwifi repo's [`kernel_boot/`](https://github.com/open-sdr/openwifi/tree/master/kernel_boot) directory, or generate `boot.bin` yourself with OpenWrt-built components. Full analysis is in the [known-issue note](https://github.com/open-sdr/openwifi/blob/master/doc/known_issue/notter.md#no-uart-output-on-zcu102).
 
 ## Debugging tools
 
@@ -249,7 +249,7 @@ openwifi_rx: 270B ht0aggr0/0 sgi0 240M FC0080 DI0000 ADDR.../00c88b113f5f/00c88b
 
 ### FPGA ILA
 
-For FPGA-internal signals, build with the ILA/debug macros enabled and use Xilinx ILA to watch the state machines in `xpu`, `tx_intf`, and `rx_intf`. See [FPGA Development → Debugging on hardware](FPGA-Development.md#debugging-on-hardware).
+For FPGA-internal signals, build with the ILA debug macros enabled and use Xilinx ILA to watch the state machines in `xpu`, `tx_intf`, and `rx_intf`. See [FPGA Development → Debugging on hardware](FPGA-Development.md#debugging-on-hardware).
 
 ## Still stuck?
 

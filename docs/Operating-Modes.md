@@ -2,17 +2,17 @@
 
 openwifi presents a normal Linux Wi-Fi interface (`sdr0`), so you drive it with the same tools you'd use for any card: `hostapd`, `wpa_supplicant`, `iw`, `iwconfig`. This page walks through each mode. Throughout, **"on board"** means commands run over ssh on the SDR board, and **"on PC"** means commands run on your computer.
 
-The two daemons used below are covered in their own right on [hostapd and wpa_supplicant](hostapd-and-wpa_supplicant.md): what they do, how they reach openwifi, which config files to edit, and how to read their output when a link won't come up.
+The [hostapd and wpa_supplicant](hostapd-and-wpa_supplicant.md) page explains the two daemons used below: what they do, how they reach openwifi, which config files to edit, and how to read their output when a link fails.
 
 A few reminders that apply to every mode:
 
-- Mount the TX and RX antennas as close to perpendicular as you can, since good TX/RX isolation matters. Perpendicular antennas couple less, so the receiver is not deafened by your own transmitter.
+- Mount the TX and RX antennas as close to perpendicular as you can, since good isolation between TX and RX matters. Perpendicular antennas couple less, so the receiver is not deafened by your own transmitter.
 - The **ADRV9361-Z7035 has very low 5 GHz TX power**, so keep nodes close on that board.
 - Any ssh session below can instead be a USB-UART serial console.
 
 ## Access point
 
-The `fosdem.sh` demo already does this: it runs `hostapd` with `hostapd-openwifi.conf` (SSID "openwifi"), a DHCP server, and a webserver. To do it by hand or understand the pieces:
+The `fosdem.sh` demo already does this. It runs `hostapd` with `hostapd-openwifi.conf` (SSID "openwifi"), a DHCP server, and a webserver. To do it by hand or understand the pieces:
 
 ```bash
 cd openwifi
@@ -36,7 +36,7 @@ iwlist sdr0 scan                    # the target SSID should appear
 wpa_supplicant -i sdr0 -c wpa-openwifi.conf   # pass -c wpa-connect.conf instead when joining your own AP
 ```
 
-Adjust the SSID/passphrase in the config file for your target network (`wpa-openwifi.conf` for an openwifi AP, or edit `wpa-connect.conf` for a different network and pass it with `-c`). A successful association prints something like:
+Adjust the SSID and passphrase in the config file for your target network (`wpa-openwifi.conf` for an openwifi AP, or edit `wpa-connect.conf` for a different network and pass it with `-c`). A successful association prints something like:
 
 ```text
 sdr0: SME: Trying to authenticate with 66:55:44:33:22:8c (SSID='openwifi' freq=5220 MHz)
@@ -101,7 +101,7 @@ iw dev sdr0 interface add mon0 type monitor && ifconfig mon0 up
 
 ## Packet injection and fuzzing
 
-Because the whole PHY is open, you can craft frames and control FPGA behavior directly for physical-layer testing and fuzzing, rather than measuring through many stack layers as `ping`/`iperf` force you to. openwifi ships an `inject_80211` tool (adapted from packetspammer).
+Because the whole PHY is open, you can craft frames and control FPGA behavior directly for physical-layer testing and fuzzing. Tools like `ping` and `iperf` can only measure through many stack layers. openwifi ships an `inject_80211` tool (adapted from packetspammer).
 
 **Build it on the board:**
 
@@ -171,10 +171,10 @@ openwifi is **OFDM-only** and therefore not backward-compatible with 802.11b. Th
 - **On the openwifi AP:** the provided `hostapd-openwifi.conf` already suppresses 11b rates (`supported_rates` / `basic_rates`).
 - **On a commercial client:** unmodified `wpa_supplicant` can't suppress 11b rates in 2.4 GHz. Build the patched version openwifi provides, on the client machine:
 
-  ```bash
-  sudo apt-get install libssl-dev    # Ubuntu 20.04 and later. On 18.04 the package is libssl1.0-dev
-  cd openwifi/user_space
-  ./build_wpa_supplicant_wo11b.sh
-  ```
+    ```bash
+    sudo apt-get install libssl-dev    # Ubuntu 20.04 and later. On 18.04 the package is libssl1.0-dev
+    cd openwifi/user_space
+    ./build_wpa_supplicant_wo11b.sh
+    ```
 
-Using 5 GHz channels avoids the issue entirely, which is why the default demo uses a 5 GHz channel.
+The default demo uses a 5 GHz channel, which avoids the 802.11b association issue.

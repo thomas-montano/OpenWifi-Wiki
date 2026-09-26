@@ -1,20 +1,20 @@
 # Wi-Fi 4 and Wi-Fi 6 Features
 
-The open-source openwifi release implements 802.11a/g plus a **single-stream, 20 MHz subset of 802.11n (Wi-Fi 4)**. Wi-Fi 5 (802.11ac) is skipped entirely, and Wi-Fi 6 (802.11ax) exists only as a commercial offering.
+The open-source openwifi release implements 802.11a/g plus a **single-stream, 20 MHz subset of 802.11n (Wi-Fi 4)**. The release does not implement Wi-Fi 5 (802.11ac). Wi-Fi 6 (802.11ax) exists only as a commercial offering.
 
-The [Architecture page](Architecture.md#what-openwifi-implements-of-80211agn) covers the same feature set from the design side (with the throughput derivation and diagrams), and this page is the usage side. If Wi-Fi itself is new to you, start with the primer below. If you know 802.11, skip straight to [the timeline](#where-openwifi-sits-in-the-wi-fi-timeline).
+The [Architecture page](Architecture.md#what-openwifi-implements-of-80211agn) covers the same feature set from the design side, with the throughput derivation and diagrams. This page covers how you use it. If Wi-Fi itself is new to you, start with the primer below. If you know 802.11, skip straight to [the timeline](#where-openwifi-sits-in-the-wi-fi-timeline).
 
 ## A short 802.11 primer
 
 This section is for people who know RF and digital modulation but haven't worked with Wi-Fi as a standard. It's the minimum background the rest of the page assumes. Individual terms are in the [Glossary](Glossary.md).
 
-**The standard and its names.** Wi-Fi is IEEE 802.11 plus a series of amendments named with letters (a, b, g, n, ac, ax). Each amendment layers new capabilities on the existing ones, and devices stay backward compatible with older peers on the same channel. The "Wi-Fi 4/5/6" generation numbers are marketing labels the Wi-Fi Alliance introduced in 2018: 802.11n is Wi-Fi 4, 802.11ac is Wi-Fi 5, 802.11ax is Wi-Fi 6. Nothing was ever officially called Wi-Fi 1 through 3. Channels live in the 2.4 GHz and 5 GHz bands (Wi-Fi 6E later added 6 GHz).
+**The standard and its names.** Wi-Fi is IEEE 802.11 plus a series of amendments named with letters (a, b, g, n, ac, ax). Each amendment layers new capabilities on the existing ones, and devices stay backward compatible with older peers on the same channel. The Wi-Fi Alliance introduced the generation numbers Wi-Fi 4, 5, and 6 as marketing labels in 2018. 802.11n is Wi-Fi 4, 802.11ac is Wi-Fi 5, and 802.11ax is Wi-Fi 6. Nothing was ever officially called Wi-Fi 1 through 3. Channels live in the 2.4 GHz and 5 GHz bands (Wi-Fi 6E later added 6 GHz).
 
-**The PHY, in RF terms.** A standard channel is 20 MHz wide and carries OFDM with a 64-point FFT, so subcarriers sit 312.5 kHz apart. Legacy 802.11a/g fills 48 subcarriers with data and 4 with pilots. Each OFDM symbol lasts 4 µs: 3.2 µs of useful symbol plus a 0.8 µs guard interval, a cyclic prefix that absorbs multipath delay spread.[^std] Subcarriers carry BPSK up to 64-QAM, protected by a rate 1/2 convolutional code that puncturing thins out to rates 2/3, 3/4, and 5/6. The fraction is the share of transmitted bits that carry information, so 5/6 means the least redundancy, and the receiver decodes it all with a Viterbi decoder (in openwifi, a Xilinx IP core). Each modulation-plus-code-rate combination has an index called the MCS. Unlike a fixed link, the transmitter re-picks the rate frame by frame based on what's getting through. On openwifi that's Linux's `minstrel_ht` rate-control algorithm, and you can pin it manually when you need repeatability.
+**The PHY, in RF terms.** A standard channel is 20 MHz wide and carries OFDM with a 64-point FFT, so subcarriers sit 312.5 kHz apart. Legacy 802.11a/g fills 48 subcarriers with data and 4 with pilots. Each OFDM symbol lasts 4 µs, made of 3.2 µs of useful symbol and a 0.8 µs guard interval. The guard interval is a cyclic prefix that absorbs multipath delay spread.[^std] Subcarriers carry BPSK up to 64-QAM, protected by a rate 1/2 convolutional code that puncturing thins out to rates 2/3, 3/4, and 5/6. The fraction is the share of transmitted bits that carry information, so 5/6 has the least redundancy. The receiver decodes the code with a Viterbi decoder, which in openwifi is a Xilinx IP core. Each modulation-plus-code-rate combination has an index called the MCS. The transmitter picks the rate again for every frame, based on which frames get through. On openwifi, Linux's `minstrel_ht` rate-control algorithm does this, and you can pin the rate manually when you need repeatability.
 
-**One shared channel, half duplex, no scheduler.** Every station transmits and receives on the same frequency and never both at once. Access is contention based (CSMA/CA): listen until the channel is idle, wait a random backoff, transmit, then wait for the receiver's acknowledgement. The ACK must start within a fixed short gap (SIFS, 10 or 16 µs depending on band), which is exactly the kind of deadline a software MAC can't meet and why openwifi runs this logic in the FPGA. The practical consequence for this page: every frame pays a fixed cost of preamble, backoff, and ACK, so real throughput lands well below the PHY rate, and features that spread that cost over more data (aggregation) often buy more than a faster PHY rate does.
+**One shared channel, half duplex, no scheduler.** Every station transmits and receives on the same frequency and never both at once. Access is contention based (CSMA/CA). A station listens until the channel is idle, waits a random backoff, and transmits. It then waits for the receiver's acknowledgement. The ACK must start within a fixed short gap (SIFS, 10 or 16 µs depending on band). A software MAC cannot meet a deadline this short, so openwifi runs this logic in the FPGA. This means that every frame pays a fixed cost of preamble, backoff, and ACK, and real throughput lands well below the PHY rate. Features that spread that cost over more data, such as aggregation, often gain more than a faster PHY rate does.
 
-**From OFDM to OFDMA.** Everything up to and including Wi-Fi 5 uses OFDM as a single-user scheme: whoever wins contention gets every subcarrier in the channel for the duration of the frame, so stations share the medium in time only. OFDMA, introduced by Wi-Fi 6, shares it in frequency as well. The subcarriers of one channel are grouped into **resource units (RUs)**, and the access point assigns RUs to different stations within the same transmission. In a 20 MHz channel an RU spans 26, 52, 106, or 242 tones, which allows anything from one full-channel user down to nine users in parallel, each on a slice about 2 MHz wide.[^std] Downlink OFDMA is one long frame carrying data for several receivers at once. Uplink OFDMA is the demanding direction: the AP invites specific stations with a trigger frame, and their transmissions must arrive at the AP aligned, so every station has to pre-correct its timing and carrier frequency tightly enough to stay orthogonal with its neighbors in the same FFT. The goal is not peak speed. A short packet no longer pays a full contention cycle for a 20 MHz channel it barely fills, so a crowded channel becomes schedulable instead of purely contention-driven.
+**From OFDM to OFDMA.** Every generation up to and including Wi-Fi 5 uses OFDM as a single-user scheme. The station that wins contention gets every subcarrier in the channel for the whole frame, so stations share the medium in time only. OFDMA, introduced by Wi-Fi 6, shares it in frequency as well. The subcarriers of one channel are grouped into **resource units (RUs)**, and the access point assigns RUs to different stations within the same transmission. In a 20 MHz channel, an RU spans 26, 52, 106, or 242 tones. This allows anything from one user on the full channel to nine users in parallel, each on a slice about 2 MHz wide.[^std] Downlink OFDMA is one long frame carrying data for several receivers at once. Uplink OFDMA is harder. The AP invites specific stations with a trigger frame, and their transmissions must arrive at the AP aligned. Every station therefore has to pre-correct its timing and carrier frequency tightly enough to stay orthogonal to its neighbors in the same FFT. OFDMA targets efficiency more than peak speed. A short packet no longer pays a full contention cycle for a 20 MHz channel it barely fills. The AP can then schedule a crowded channel instead of leaving it purely to contention.
 
 <figure>
 <svg viewBox="0 0 920 320" role="img" aria-label="OFDM versus OFDMA. With OFDM each transmission fills the whole 20 MHz channel and stations alternate in time, separated by contention. With OFDMA one transmission is split into resource units so several stations share the channel at once, and a single station can still take the whole channel." style="width:100%;height:auto;max-width:1080px;font-family:inherit;font-size:13px">
@@ -62,30 +62,30 @@ This section is for people who know RF and digital modulation but haven't worked
 <figcaption>Left: through Wi-Fi 5, every transmission occupies the whole channel and stations take turns through contention. Right: Wi-Fi 6 OFDMA assigns resource units to several stations within one transmission, and a single station can still get the full channel.</figcaption>
 </figure>
 
-**Features are negotiated, not just implemented.** Stations advertise what they support in capability fields inside management frames (beacons, probe responses, association frames). A feature is only used on a link when *both* ends advertise it. Some things exist in openwifi's FPGA but sit idle until you tell the driver to advertise them, short guard interval being the main example.
+**Features must be negotiated.** Stations advertise what they support in capability fields inside management frames (beacons, probe responses, association frames). A feature is only used on a link when *both* ends advertise it. Some features exist in openwifi's FPGA but stay unused until you tell the driver to advertise them. Short guard interval is the main example.
 
 ## Where openwifi sits in the Wi-Fi timeline
 
 | Generation | Standard | Status in openwifi (open source) |
 |---|---|---|
-| pre-Wi-Fi 4 | 802.11a / 802.11g | Supported (legacy OFDM, 6–54 Mbps)[^readme] |
+| pre-Wi-Fi 4 | 802.11a and 802.11g | Supported (legacy OFDM, 6–54 Mbps)[^readme] |
 | pre-Wi-Fi 4 | 802.11b | Not supported. openwifi is OFDM-only, see [About 802.11b](Operating-Modes.md#about-80211b) |
 | Wi-Fi 4 | 802.11n | Supported: single spatial stream, 20 MHz, MCS 0–7 (this page)[^readme] |
 | Wi-Fi 5 | 802.11ac | Not implemented (see below) |
 | Wi-Fi 6 | 802.11ax | Commercial only, via [openwifi.tech](https://openwifi.tech)[^readme] |
 
-!!! note "Non-Wi-Fi bandwidth variants"
-    openwifi can also run 2 MHz channels for 802.11ah-style sub-GHz work and 10 MHz for 802.11p vehicular. Those are bandwidth/frequency reconfigurations of the same 802.11a/g/n design, not extra standards. See [sdrctl → frequency tuning](sdrctl-and-Runtime-Control.md#frequency-restrict-and-arbitrary-tuning).
+!!! note "Narrower channels (2 MHz and 10 MHz)"
+    The upstream README also lists 2 MHz channels for 802.11ah-style sub-GHz work and 10 MHz channels for 802.11p vehicular work. These would be bandwidth and frequency reconfigurations of the same 802.11a/g/n design, not extra standards. Neither upstream repository documents how to set them up (see the [FAQ](FAQ-and-Resources.md#can-it-work-outside-normal-wi-fi-frequencies)). Tuning a 20 MHz channel to an arbitrary center frequency is documented in [sdrctl → frequency tuning](sdrctl-and-Runtime-Control.md#frequency-locking-and-arbitrary-tuning).
 
 ### Why there's no Wi-Fi 5
 
-Skipping a whole generation looks odd until you check where Wi-Fi 5's speed actually comes from: 80 and 160 MHz channels, up to eight spatial streams, and MU-MIMO, all in the 5 GHz band only. A 20 MHz single-stream design can use none of that. The only 11ac feature that would apply is 256-QAM, worth roughly 87 Mbps at 20 MHz single-stream versus 72 Mbps for 11n.[^std]
+Wi-Fi 5 gets its speed from 80 and 160 MHz channels, up to eight spatial streams, and MU-MIMO, all in the 5 GHz band only. A 20 MHz single-stream design can use none of that. The only 11ac feature that would apply is 256-QAM, which gives roughly 87 Mbps at 20 MHz single-stream versus 72 Mbps for 11n.[^std]
 
-Wi-Fi 6 is different. It reworks the OFDM numerology and adds OFDMA, which subdivides a single 20 MHz channel between users. Those features matter even at 20 MHz with a single stream. Between the two generations, Wi-Fi 6 is the one that this hardware can benefit from, so going from 11n to 11ax skips almost nothing openwifi could have used.
+Wi-Fi 6 is different. It reworks the OFDM numerology and adds OFDMA, which subdivides a single 20 MHz channel between users. Those features matter even at 20 MHz with a single stream. Of the two generations, only Wi-Fi 6 offers much that this hardware can use. Going from 11n straight to 11ax therefore skips almost nothing openwifi could have used.
 
 ## Wi-Fi 4 (802.11n) in the open-source release
 
-802.11n's formal name for its feature set is **HT, high throughput**, and that is the label used in practice: driver logs mark 802.11n frames `ht1` and legacy 11a/g frames `ht0`, tools take `-m n` or "HT" flags, and capability fields are called "HT capabilities." The amendment added five PHY improvements and frame aggregation at the MAC:
+802.11n's formal name for its feature set is **HT, high throughput**, and that label appears everywhere in practice. Driver logs mark 802.11n frames `ht1` and legacy 11a/g frames `ht0`. Tools take `-m n` or "HT" flags, and capability fields are called "HT capabilities." The amendment added five PHY improvements and frame aggregation at the MAC:
 
 | 802.11n feature | What it does | In openwifi? | How you control it |
 |---|---|---|---|
@@ -97,7 +97,7 @@ Wi-Fi 6 is different. It reworks the OFDM numerology and adds OFDMA, which subdi
 | MIMO (up to 4 streams) | Multiplies throughput by the stream count | ❌ no | – |
 | 40 MHz bandwidth | Doubles the channel | ❌ no | – |
 
-With everything supported switched on, the theoretical PHY ceiling is **72.2 Mbps** (MCS 7 with short GI). The step-by-step derivation is on the [Architecture page](Architecture.md#what-openwifi-implements-of-80211agn), and measured throughput reaches 40–50 Mbps TCP / ~50 Mbps UDP with aggregation on.[^readme]
+With everything supported switched on, the theoretical PHY ceiling is **72.2 Mbps** (MCS 7 with short GI). The step-by-step derivation is on the [Architecture page](Architecture.md#what-openwifi-implements-of-80211agn). Measured throughput reaches 40 to 50 Mbps TCP and about 50 Mbps UDP with aggregation on.[^readme]
 
 ### The HT rate table
 
@@ -120,9 +120,9 @@ By default Linux's `minstrel_ht` rate control walks this table automatically bas
 
 ### What a frame looks like on the air
 
-Everything above (MCS, guard interval, aggregation) is a property of one **PPDU**: the complete PHY frame openwifi's FPGA puts on the air. A PPDU is a PHY *preamble* followed by a *Data field*, and it does not travel alone: the transmitter first wins the channel through DIFS-plus-backoff contention, and after a fixed SIFS gap the receiver answers. The figure below walks down through those three levels.
+Everything above (MCS, guard interval, aggregation) is a property of one **PPDU**, the complete PHY frame that openwifi's FPGA puts on the air. A PPDU is a PHY *preamble* followed by a *Data field*. Before sending it, the transmitter wins the channel through DIFS-plus-backoff contention. After a fixed SIFS gap, the receiver answers. The figure below walks down through those three levels.
 
-Every generation keeps the same **legacy preamble** (L-STF, L-LTF, L-SIG, ~20 µs) so that any nearby 802.11a/g device can still detect the frame and defer. 802.11n then adds ~8 µs of HT training and 802.11ax ~16 µs of HE training on top. That preamble, the SIFS, and the acknowledgement are paid once per PPDU no matter how much data rides inside it, which is why packing many MPDUs into one Data field as an A-MPDU (bottom row) saves so much.
+Every generation keeps the same **legacy preamble** (L-STF, L-LTF, L-SIG, about 20 µs) so that any nearby 802.11a/g device can still detect the frame and defer. 802.11n adds about 8 µs of HT training on top, and 802.11ax about 16 µs of HE training. The preamble, the SIFS, and the acknowledgement are paid once per PPDU, however much data it carries. Packing many MPDUs into one Data field as an A-MPDU (bottom row) therefore saves a lot of airtime.
 
 <figure>
 <svg viewBox="0 0 920 462" role="img" aria-label="Three levels of an openwifi transmission. Top: channel access, where a PPDU is preceded by DIFS and backoff and followed after a SIFS gap by a Block ACK. Middle: the PPDU field structure for 802.11a/g, 802.11n and 802.11ax, all sharing the same legacy preamble (L-STF, L-LTF, L-SIG) and then adding HT or HE training fields before the Data field. Bottom: the Data field is an A-MPDU of several MPDU subframes, each made of an MPDU delimiter, MAC header, frame body and FCS, acknowledged together by one Block ACK." style="width:100%;height:auto;max-width:1080px;font-family:inherit;font-size:13px">
@@ -214,12 +214,12 @@ Every generation keeps the same **legacy preamble** (L-STF, L-LTF, L-SIG, ~20 µ
   <text x="571" y="449" text-anchor="middle" font-size="8.5" fill="currentColor" fill-opacity="0.7">variable length</text>
   <text x="863" y="449" text-anchor="middle" font-size="8.5" fill="currentColor" fill-opacity="0.7">4 B</text>
 </svg>
-<figcaption>The same transmission at three zoom levels. <strong>Top:</strong> the PPDU wins the channel after DIFS + backoff and is acknowledged one SIFS later. <strong>Middle:</strong> all three generations openwifi cares about share the legacy preamble (L-STF/L-LTF/L-SIG) for backward compatibility, then 802.11n adds HT training and 802.11ax adds RL-SIG/HE-SIG-A/HE training before the Data field. openwifi's open release implements the 11a/g and 11n rows. <strong>Bottom:</strong> with A-MPDU on, that Data field holds many MPDU subframes (each a delimiter + MAC header + frame body + FCS) under one preamble, and a single Block ACK acknowledges them all: one corrupted subframe costs one retransmission, not the whole aggregate.</figcaption>
+<figcaption>The same transmission at three zoom levels. <strong>Top:</strong> the PPDU wins the channel after DIFS + backoff and is acknowledged one SIFS later. <strong>Middle:</strong> the three generations shown share the legacy preamble (L-STF, L-LTF, L-SIG) for backward compatibility. 802.11n then adds HT training, and 802.11ax adds RL-SIG, HE-SIG-A, and HE training before the Data field. openwifi's open release implements the 11a/g and 11n rows. <strong>Bottom:</strong> with A-MPDU on, that Data field holds many MPDU subframes under one preamble, each made of a delimiter, MAC header, frame body, and FCS. A single Block ACK acknowledges them all, so one corrupted subframe costs one retransmission instead of the whole aggregate.</figcaption>
 </figure>
 
 ### Turning on A-MPDU aggregation
 
-Aggregation gives the largest practical throughput gain. At tens of Mbps the fixed per-frame cost (preamble, SIFS, ACK, backoff) starts to dominate, and A-MPDU packs many MPDUs into one transmission so that cost is paid once. Acknowledgement is amortized the same way: the receiver answers the whole aggregate with a single block ACK that flags any subframes needing retransmission, instead of one ACK per frame.[^std] openwifi's published iperf numbers were measured with aggregation on.[^readme]
+Aggregation gives the largest practical throughput gain. At tens of Mbps the fixed per-frame cost (preamble, SIFS, ACK, backoff) starts to dominate, and A-MPDU packs many MPDUs into one transmission so that cost is paid once. Acknowledgement is amortized the same way. The receiver answers the whole aggregate with a single block ACK that flags any subframes needing retransmission, instead of sending one ACK per frame.[^std] openwifi's published iperf numbers were measured with aggregation on.[^readme]
 
 <figure markdown>
 ![A-MPDU vs A-MSDU aggregation](assets/img/mpdu-aggr.png){ width="650" }
@@ -233,7 +233,7 @@ cd openwifi
 ./wgd.sh 1        # test_mode=1, bit 0 = A-MPDU aggregation
 ```
 
-The `1` becomes the `test_mode` module parameter of `sdr.ko`. With bit 0 set, the driver advertises A-MPDU support in its HT capabilities (aggregates up to 8 kB, 2 µs minimum MPDU spacing) and handles mac80211's aggregation callbacks.[^sdrc] Both ends of the link negotiate the rest through the normal 802.11 block-ack setup.
+The `1` becomes the `test_mode` module parameter of `sdr.ko`. With bit 0 set, the driver advertises A-MPDU support in its HT capabilities, with aggregates up to 8 kB and a 2 µs minimum MPDU spacing. It also handles mac80211's aggregation callbacks.[^sdrc] Both ends of the link negotiate the rest through the normal 802.11 block-ack setup.
 
 !!! warning "Experimental"
     Aggregation is documented as experimental.[^docreadme] Try it first when you want more throughput, and turn it off first when you are investigating instability.
@@ -247,7 +247,7 @@ The `1` becomes the `test_mode` module parameter of `sdr.ko`. With bit 0 set, th
 <figcaption>The same OFDM symbols with the normal 800 ns and the short 400 ns guard interval. Figure from the openwifi 802.11n app note.</figcaption>
 </figure>
 
-openwifi's PHY handles 400 ns short-GI frames in both directions, and short GI is what lifts MCS 7 from 65 to 72.2 Mbps. The driver adds a subtlety, though: it only *advertises* short-GI support to peers when `test_mode` **bit 1** is set. The code comment says short GI "seems to bring unnecessary stability issue," so by default a negotiated link runs with the normal 800 ns GI and tops out at 65 Mbps.[^sdrc]
+openwifi's PHY handles 400 ns short-GI frames in both directions. Short GI is what lifts MCS 7 from 65 to 72.2 Mbps. However, the driver only *advertises* short-GI support to peers when `test_mode` **bit 1** is set. The code comment says short GI "seems to bring unnecessary stability issue." By default, a negotiated link therefore runs with the normal 800 ns GI and tops out at 65 Mbps.[^sdrc]
 
 ```bash
 ./wgd.sh 2        # advertise short GI only
@@ -277,9 +277,9 @@ Values 4 through 11 select MCS 0 through 7. Register 0 does the same for legacy 
 
 In monitor mode, `inject_80211 -m n -r <0..7>` selects the MCS per injected frame instead.
 
-### Checking what's actually on the air
+### Checking what is on the air
 
-The quickest way to see whether HT, aggregation, and short GI are really in use is the driver's RX print in `dmesg` (enable it via the dmesg print control, see [Troubleshooting → driver dmesg logging](Troubleshooting.md#driver-dmesg-logging)):
+The quickest way to see whether HT, aggregation, and short GI are in use is the driver's RX print in `dmesg`. Enable it with the dmesg print control (see [Troubleshooting → driver dmesg logging](Troubleshooting.md#driver-dmesg-logging)). A received frame then logs a line like this:
 
 ```text
 sdr,sdr openwifi_rx: 270B ht1aggr1/0 sgi1 650M FC0088 ...
@@ -290,12 +290,12 @@ sdr,sdr openwifi_rx: 270B ht1aggr1/0 sgi1 650M FC0088 ...
 - `sgi1` means short guard interval
 - `650M` is the rate, here 65 Mbps = MCS 7[^docreadme]
 
-A capture with `tcpdump` on a monitor interface shows the same information in the radiotap header (per-frame metadata the driver attaches to captures: rate or MCS, guard interval, signal strength), which is friendlier for offline analysis.
+A capture with `tcpdump` on a monitor interface shows the same information in the radiotap header. This is per-frame metadata that the driver attaches to captures, such as the rate or MCS, the guard interval, and the signal strength. It is easier to use for offline analysis.
 
 ### Limitations to plan around
 
 - **One spatial stream, 20 MHz, always.** The 72.2 Mbps ceiling is a hard PHY limit of the open-source design. The two antennas on a board are separate TX and RX paths for isolation, not MIMO.
-- **Throughput in practice is ~50 Mbps**, not 72. Preambles, ACKs, and contention take their share even with aggregation.[^readme]
+- **Throughput in practice is about 50 Mbps**, well below the 72.2 Mbps PHY rate. Preambles, ACKs, and contention take their share even with aggregation.[^readme]
 - **Short GI is off by default** at the capability level, so a default link peaks at 65 Mbps PHY rate.
 - **A-MSDU is absent and A-MPDU is experimental**, so a commercial peer that relies on aggressive aggregation defaults reaches a higher rate than an openwifi link.
 - **No 802.11b compatibility.** In the 2.4 GHz band, legacy clients and management-frame fallbacks cause problems. See [About 802.11b](Operating-Modes.md#about-80211b).
@@ -306,16 +306,16 @@ A capture with `tcpdump` on a monitor interface shows the same information in th
 
 Wi-Fi 6 is **not in the open-source release**. The README lists "802.11ax and more advanced features" under the commercial offering at [openwifi.tech](https://openwifi.tech), which provides subscriptions on top of the AGPLv3 baseline (academic discounts are available).[^readme]
 
-The plan is visible in the open driver: the rate-override register map reserves slots for VHT (11ac) and HE (11ax) overrides, both marked *not implemented*.[^docreadme] The open code gives you the platform Wi-Fi 6 work builds on, not the Wi-Fi 6 PHY itself.
+The open driver's register map already reserves slots for VHT (11ac) and HE (11ax) rate overrides, both marked *not implemented*.[^docreadme] The open code is the platform that Wi-Fi 6 work builds on. It does not include the Wi-Fi 6 PHY.
 
 ### What Wi-Fi 6 would add on this hardware
 
-The generation names describe the intent. 802.11n is *high throughput*, 802.11ax is *high efficiency*. Wi-Fi 4 made a single link faster. Wi-Fi 6 mostly makes a busy channel more useful: many stations, small packets, and latency-sensitive traffic instead of one fast file transfer. Unlike Wi-Fi 5, its features don't depend on wide channels or many antennas, so they remain meaningful on this hardware. At 20 MHz with a single stream, the two generations compare like this:[^std]
+The feature-set names describe the intent. 802.11n's feature set is called HT, *high throughput*, and it made a single link faster. The 802.11ax feature set, HE (*high efficiency*), aims instead at busy channels with many stations, small packets, and latency-sensitive traffic. Unlike Wi-Fi 5, its features don't depend on wide channels or many antennas, so they remain meaningful on this hardware. At 20 MHz with a single stream, the two generations compare like this:[^std]
 
 | | Wi-Fi 4 (802.11n) | Wi-Fi 6 (802.11ax) |
 |---|---|---|
 | Subcarrier spacing | 312.5 kHz | 78.125 kHz |
-| OFDM symbol | 3.2 µs + 0.4/0.8 µs GI | 12.8 µs + 0.8/1.6/3.2 µs GI |
+| OFDM symbol | 3.2 µs + 0.4 or 0.8 µs GI | 12.8 µs + 0.8, 1.6, or 3.2 µs GI |
 | Data subcarriers (20 MHz) | 52 | 234 |
 | Top modulation | 64-QAM (MCS 7) | 1024-QAM (MCS 11) |
 | FEC | Punctured convolutional (BCC) | LDPC at the higher rates |
@@ -327,9 +327,9 @@ The generation names describe the intent. 802.11n is *high throughput*, 802.11ax
 
 What the rows mean in practice:
 
-- **The denser numerology is the enabler.** Subcarriers sit 4x closer and symbols run 4x longer within the same 20 MHz. That's what makes the channel divisible into RUs (a 26-tone RU still has enough subcarriers to be useful), and the longer guard intervals tolerate outdoor delay spreads that would break an 800 ns GI.
+- **The denser numerology is the enabler.** Subcarriers sit 4x closer and symbols run 4x longer within the same 20 MHz. This allows the channel to be divided into RUs, since a 26-tone RU still has enough subcarriers to be useful. The longer guard intervals also tolerate outdoor delay spreads that would break an 800 ns GI.
 - **1024-QAM and LDPC roughly double the single-stream ceiling**, but only at SNRs a clean short link can deliver. The efficiency features matter in more situations than the speed ones.
-- **OFDMA changes the access model**, not just the rate (see [the primer](#a-short-80211-primer) for how RUs and trigger frames work). Scheduled uplink access enables the latency control that pure CSMA/CA can't give, and it's the feature openwifi's Wi-Fi 6 research centers on.
+- **OFDMA changes the access model** as well as the rate (see [the primer](#a-short-80211-primer) for how RUs and trigger frames work). Scheduled uplink access allows latency control that pure CSMA/CA cannot give. It is also the feature that openwifi's Wi-Fi 6 research focuses on.
 - **TWT and BSS coloring** target dense deployments: battery devices that wake on a schedule instead of contending, and neighboring networks that overlap without freezing each other.
 
 <figure>
@@ -383,19 +383,19 @@ What the rows mean in practice:
 <figcaption>The defined resource-unit splits of a 20 MHz channel. Sizes can be mixed within one transmission (say, one 106-tone RU plus two 52-tone RUs), the usable tone count differs slightly between splits because of null tones, and the AP can redraw the layout for every transmission.</figcaption>
 </figure>
 
-One hardware note: Wi-Fi 6E's new spectrum (5.925 to 7.125 GHz) is mostly out of reach, because the AD9361 front end tops out at 6 GHz.
+Wi-Fi 6E's new spectrum (5.925 to 7.125 GHz) is mostly out of reach, because the AD9361 front end tops out at 6 GHz.
 
 ### openwifi in Wi-Fi 6 research
 
-Even with the open release at Wi-Fi 4, openwifi is the base of published Wi-Fi 6 work, including experimental OFDMA and cross-technology interference studies and an ACM WiNTECH 2025 best paper on coordinated OFDMA. See [selected publications](FAQ-and-Resources.md#selected-publications) and the full [publications list](https://github.com/open-sdr/openwifi/blob/master/doc/publications.md).
+Although the open release stops at Wi-Fi 4, openwifi is the base of published Wi-Fi 6 work. This includes experimental OFDMA and cross-technology interference studies, and an ACM WiNTECH 2025 best paper on coordinated OFDMA. See [selected publications](FAQ-and-Resources.md#selected-publications) and the full [publications list](https://github.com/open-sdr/openwifi/blob/master/doc/publications.md).
 
 ### If you need Wi-Fi 6 today
 
-Contact the team through [openwifi.tech](https://openwifi.tech) for the subscription tiers. If your need is "features beyond stock Wi-Fi 4 behavior" rather than the 11ax PHY itself, first check what the open release already exposes: every MAC timing parameter, CCA threshold, and queue is programmable (see [sdrctl & Runtime Control](sdrctl-and-Runtime-Control.md) and [Research Features](Research-Features.md)). A lot of "I need Wi-Fi 6 scheduling behavior" experiments can be approximated that way.
+The open release can approximate many Wi-Fi 6 scheduling experiments through programmable MAC controls. Every MAC timing parameter, CCA threshold, and queue is configurable (see [sdrctl & Runtime Control](sdrctl-and-Runtime-Control.md) and [Research Features](Research-Features.md)). Check those controls before deciding whether you need the 11ax PHY. For the commercial version and subscription tiers, contact the team through [openwifi.tech](https://openwifi.tech).
 
 ## Sources
 
-[^readme]: openwifi [`README.md`](https://github.com/open-sdr/openwifi/blob/master/README.md): the feature list (802.11a/g/n, 20 MHz, aggregation via `./wgd.sh 1`, measured performance) and the 802.11ax / openwifi.tech statement.
-[^docreadme]: openwifi [`doc/README.md`](https://github.com/open-sdr/openwifi/blob/master/doc/README.md): the `test_mode` definition (bit 0 = A-MPDU), the `drv_tx` rate-override registers including the unimplemented VHT/HE slots and the `+16` short-GI encoding, and the RX print format (`ht`/`aggr`/`sgi` fields).
-[^sdrc]: openwifi [`driver/sdr.c`](https://github.com/open-sdr/openwifi/blob/master/driver/sdr.c): HT capability setup (`IEEE80211_HT_CAP_SGI_20` gated on `test_mode&2` with the stability comment, A-MPDU parameters gated on `test_mode&1`, MCS 0–7 in `mcs.rx_mask`) and `openwifi_ampdu_action()`.
+[^readme]: openwifi [`README.md`](https://github.com/open-sdr/openwifi/blob/master/README.md): the feature list (802.11a/g/n, 20 MHz, aggregation via `./wgd.sh 1`, measured performance) and the statement about 802.11ax at openwifi.tech.
+[^docreadme]: openwifi [`doc/README.md`](https://github.com/open-sdr/openwifi/blob/master/doc/README.md): the `test_mode` definition (bit 0 = A-MPDU) and the `drv_tx` rate-override registers, including the unimplemented VHT and HE slots and the `+16` short-GI encoding. It also gives the RX print format (`ht`, `aggr`, and `sgi` fields).
+[^sdrc]: openwifi [`driver/sdr.c`](https://github.com/open-sdr/openwifi/blob/master/driver/sdr.c): HT capability setup (`IEEE80211_HT_CAP_SGI_20` gated on `test_mode&2` with the stability comment, A-MPDU parameters gated on `test_mode&1`, MCS 0 to 7 in `mcs.rx_mask`) and `openwifi_ampdu_action()`.
 [^std]: **IEEE 802.11**: values that follow from the standard (the HT MCS table, 11ac/11ax feature sets and rates), not from openwifi-specific measurements.
