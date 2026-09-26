@@ -253,4 +253,4 @@ For FPGA-internal signals, build with the ILA debug macros enabled and use Xilin
 
 ## Still stuck?
 
-Check the [openwifi discussions](https://github.com/open-sdr/openwifi/discussions) and [issues](https://github.com/open-sdr/openwifi/issues), the [mailing list](https://lists.ugent.be/wws/subscribe/openwifi), and the [Tips for Windows users](https://github.com/open-sdr/openwifi/discussions/341) thread. See [FAQ and Resources](FAQ-and-Resources.md) for the full list of community channels.
+Search this page and the [FAQ](FAQ-and-Resources.md#frequently-asked-questions), then check existing [openwifi Discussions](https://github.com/open-sdr/openwifi/discussions) for a similar case. For Windows setup, see [Tips for Windows users](https://github.com/open-sdr/openwifi/discussions/341). If you still need help, use a question channel listed under [Community and support](FAQ-and-Resources.md#community-and-support).

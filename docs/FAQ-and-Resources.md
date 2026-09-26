@@ -98,9 +98,10 @@ A curated playlist lives in [`doc/videos.md`](https://github.com/open-sdr/openwi
 
 ## Community and support
 
-- **Discussions:** <https://github.com/open-sdr/openwifi/discussions>
-- **Issues:** <https://github.com/open-sdr/openwifi/issues> and <https://github.com/open-sdr/openwifi-hw/issues>
-- **Mailing list:** <https://lists.ugent.be/wws/subscribe/openwifi>
+For setup and usage questions, search this wiki, especially [Getting Started](Getting-Started.md) and [Troubleshooting](Troubleshooting.md), then check existing [openwifi Discussions](https://github.com/open-sdr/openwifi/discussions). If you still need help, ask in Discussions or on the [mailing list](https://lists.ugent.be/wws/subscribe/openwifi).
+
+Use the [openwifi issue tracker](https://github.com/open-sdr/openwifi/issues) for reproducible software bugs and the [openwifi-hw issue tracker](https://github.com/open-sdr/openwifi-hw/issues) for reproducible FPGA bugs. Search existing issues first, then include the board, software version, steps to reproduce, expected result, and actual result in a new report.
+
 - **Commercial support & advanced features:** <https://openwifi.tech>
 - **Contributing:** see [Contributing to openwifi](Contributing-to-openwifi.md), with the `CONTRIBUTING.md` in each repo as the authoritative follow-up.
 

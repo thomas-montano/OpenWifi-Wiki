@@ -41,13 +41,7 @@ openwifi is [split across several repos](Repositories.md) by toolchain, so the f
 
 ## 5. Community and support
 
-- **Discussions:** <https://github.com/open-sdr/openwifi/discussions>
-- **Issues:** [openwifi](https://github.com/open-sdr/openwifi/issues) and [openwifi-hw](https://github.com/open-sdr/openwifi-hw/issues)
-- **Mailing list:** <https://lists.ugent.be/wws/subscribe/openwifi>
-- **Windows dev tips:** the [Tips for Windows users](https://github.com/open-sdr/openwifi/discussions/341) thread
-- **Commercial support & advanced features:** <https://openwifi.tech>
-
-See [FAQ & Resources](FAQ-and-Resources.md#community-and-support) for the full list.
+For setup and usage questions, use the guidance under [Community and support](FAQ-and-Resources.md#community-and-support). Keep issue reports focused on reproducible bugs. For Windows setup, see [Tips for Windows users](https://github.com/open-sdr/openwifi/discussions/341).
 
 ## 6. Licensing
 
