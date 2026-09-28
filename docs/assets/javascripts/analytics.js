@@ -21,9 +21,9 @@
     });
   }
 
-  function event(name) {
+  function event(name, title) {
     // Count each action. GoatCounter otherwise deduplicates events by session.
-    send({ p: name, e: '1', ns: '1' });
+    send({ p: name, t: title || name, e: '1', ns: '1' });
   }
 
   function referringHost() {
@@ -46,6 +46,11 @@
     return 'other';
   }
 
+  function outboundDestination(url) {
+    // The query string can carry personal data, so only the host and path are recorded.
+    return (url.hostname + url.pathname).replace(/\/+$/, '').slice(0, 250);
+  }
+
   function trackOutbound(click) {
     if (click.type === 'auxclick' && click.button !== 1) return;
     const link = click.target.closest('a[href]');
@@ -54,7 +59,8 @@
     const target = new URL(link.href);
     if (!['http:', 'https:'].includes(target.protocol)) return;
     if (target.hostname === location.hostname) return;
-    event('outbound:' + outboundCategory(target));
+    const category = 'outbound:' + outboundCategory(target);
+    event(category + ':' + outboundDestination(target), category);
   }
 
   function setUpSearch() {
