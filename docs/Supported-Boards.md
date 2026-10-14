@@ -22,6 +22,7 @@ openwifi runs on **Xilinx Zynq-7000 and Zynq UltraScale+ (MPSoC)** boards. Nearl
 | `neptunesdr` | Low-cost Zynq-7020 + AD9361 board | Zynq-7020 | No | **Unofficial**, community supported |
 | `rfsoc4x2` | AMD RFSoC4x2 | Zynq UltraScale+ RFSoC | **Yes** | **Driver support only.** No public FPGA project, boot files, or bitstream. See the note below. |
 | `LibreSDR` | Low-cost Zynq-7020 + AD9361 board | Zynq-7020 | No | **Unofficial**, external repo [openwifi-libresdr](https://github.com/pavelyazev/openwifi-libresdr) |
+| `plutosky_r2` | PlutoSky R2 + AD9361, on-board ADF4001 PLL | Zynq-7020 | No | DDR3, GEM0 RGMII Ethernet. Built and tested with Vivado 2020.2, not the 2022.2 the rest of the repository targets. |
 
 The **Vivado license** column only matters if you rebuild the FPGA from source. The [prebuilt bitstreams](https://github.com/open-sdr/openwifi-hw-img) run on any board with no license. Boards on the Zynq-7020 qualify for the free Vivado tier.
 
@@ -81,6 +82,7 @@ A Zynq-7020 + AD936x SDR in a **Raspberry-Pi form factor**.
 - **ZCU102 differs from every other board.** It is the only 64-bit (Zynq UltraScale+) board with public images. It uses a different boot chain, with ARM Trusted Firmware BL31 and PMU firmware built by `build_zynqmp_boot_bin.sh`. Its device tree is `system.dts` instead of `devicetree.dts`. It can also hit SD card, RTC, and SODIMM module issues (see [Troubleshooting](Troubleshooting.md)).
 - **neptunesdr** sometimes shows an [`EXT4-fs error` on first boot](Troubleshooting.md#ext4-fs-error-device-mmcblk0p2-on-first-boot). Re-flash with a different imaging tool.
 - **CH341-based UART adapters** (antsdr_e200 and others) may need `sudo apt remove brltty` before [the console device appears](Troubleshooting.md#no-uart-console-device-appears).
+- **PlutoSky R2 builds under Vivado 2020.2, not the 2022.2 the rest of openwifi-hw targets.** `boards/openwifi.tcl` and the per-IP `.tcl` scripts detect the running Vivado version instead of assuming 2022.2, so the shared build scripts still work on the older release.
 
 ## The baseband clock per board
 
