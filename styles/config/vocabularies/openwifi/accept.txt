@@ -14,6 +14,14 @@ owfuzz
 packetspammer
 minstrel_ht
 radiotap
+iw
+dtc
+fdtoverlay
+uImage
+
+# Release codenames
+shahecheng
+leuven
 
 # Vendors, products, and organizations
 Xilinx('s)?
@@ -78,7 +86,15 @@ backhaul
 demodulator('s)?
 demod
 descrambl(e|es|er|ing)
+deinterleave[drs]?
 unpacker
+eXtensible
+FSMs?
+mux(es)?
+backpressure
+deassert(s|ed|ing)?
+strobed
+delim
 STAs?
 SNRs?
 APs?
@@ -116,7 +132,7 @@ connectionless
 datasheets?
 datagrams?
 datapath
-decompiling
+decompil(e|ed|es|ing)
 desynchronizes
 dmesg
 hardcoded
@@ -141,6 +157,7 @@ subcommands?
 subframes?
 substrings?
 sysfs
+teardown
 testbench(es)?
 testmode
 toolchains?
@@ -170,6 +187,9 @@ rssi_half_db
 sync_short
 tlast
 tx_intf
+rx_intf
+openwifi_rx_interrupt
+result_iq_ready
 Gb
 Fc
 ns

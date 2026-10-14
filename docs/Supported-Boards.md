@@ -36,7 +36,7 @@ The **Vivado license** column only matters if you rebuild the FPGA from source. 
 
 ## No hardware? Use the testbed
 
-If you have no board at all, the imec **[w-iLab.t testbed](https://doc.ilabt.imec.be/ilabt/wilab/tutorials/openwifi.html)** offers remote access to openwifi-ready boards (and supports JTAG boot instead of SD-card boot). It is the fastest way to try openwifi and to develop against real hardware you don't own.
+If you have no board at all, the imec **[w-iLab.t testbed](https://doc.ilabt.imec.be/ilabt/wilab/tutorials/openwifi.html)** offers remote access to openwifi-ready boards (and supports JTAG boot instead of SD-card boot). It lets you try openwifi and develop against real hardware you don't own.
 
 ## Community boards from MicroPhase and HexSDR
 

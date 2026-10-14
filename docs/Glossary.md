@@ -78,7 +78,7 @@ ERP
 :   Extended Rate PHY: the 802.11g amendment that brought OFDM to 2.4 GHz. "ERP short-slot" (the shorter 9 µs slot time) is one of the CSMA parameters `xpu` register 4 carries.
 
 EVM
-:   Error Vector Magnitude: a measure of modulation accuracy (lower is better). openwifi reaches roughly −38 dB EVM in its best configuration.
+:   Error Vector Magnitude: a measure of modulation accuracy (lower is better). The lowest EVM openwifi reaches is roughly −38 dB.
 
 FCS
 :   Frame Check Sequence: the CRC appended to an 802.11 frame. The FPGA reports FCS pass/fail per received packet, and monitor mode passes even bad-FCS frames up.

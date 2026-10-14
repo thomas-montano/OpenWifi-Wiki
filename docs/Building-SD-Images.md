@@ -4,7 +4,7 @@ openwifi boots from an SD card running one of three base operating systems, and 
 
 - **ADI Kuiper**: an image similar to Debian or Ubuntu (the classic openwifi environment, and what the `fosdem.sh` demo and most app notes assume).
 - **OpenWrt**: a router-style image with the LuCI web UI, with openwifi packaged as a kernel module.
-- **Buildroot**: a small, fast-booting, reproducible image aimed at deployment, currently for the MicroPhase ANTSDR boards (`antsdr_e200`, `antsdr`, `e310v2`). See [Buildroot](#buildroot) below.
+- **Buildroot**: a small, fast-booting, reproducible image aimed at deployment, for the MicroPhase ANTSDR boards (`antsdr_e200`, `antsdr`, `e310v2`). See [Buildroot](#buildroot) below.
 
 !!! tip "You may not need to build anything"
     Prebuilt images exist for Kuiper and OpenWrt. If you only need a working board, flash a prebuilt image as in [Getting Started](Getting-Started.md) (Kuiper) or the [OpenWrt quick start](#openwrt-quick-start-prebuilt-image) below. Build from scratch when you need a custom kernel, a new board, or an image you control end to end.
@@ -16,7 +16,7 @@ The builds below assume you understand the [boot chain and device tree](Boot-Ker
 | | ADI Kuiper | OpenWrt | Buildroot |
 |---|---|---|---|
 | Feels like | A small Debian or Ubuntu box | A Wi-Fi router (LuCI web UI) | A minimal embedded appliance (serial console, BusyBox) |
-| Best for | Research, the app-note workflows, full apt tooling | Router use cases | Small, reproducible deployment images |
+| Suited to | Research, the app-note workflows, full apt tooling | Router use cases | Small, reproducible deployment images |
 | Build needs | Vivado 2022.2 + Vitis | Docker only (no Vivado) | Buildroot host packages + a prebuilt XSA (no Vivado) |
 | openwifi tools | Built on the board | Packaged into the image (in `$PATH`) | Built into the image under `/root/openwifi` |
 | Boards | All supported boards | Most supported boards | `antsdr_e200`, `antsdr`, `e310v2` |
@@ -325,7 +325,7 @@ Buildroot produces a small (about 169 MB), fast-booting, reproducible SD image a
 
 ### Board support
 
-Buildroot currently targets three ANTSDR boards, all booted and tested on real hardware:
+Buildroot targets three ANTSDR boards, all booted and tested on real hardware:
 
 | Build name | Hardware | Serial console | RAM |
 |---|---|---|---|

@@ -1,6 +1,6 @@
 # FPGA Simulation and Testbenches
 
-Simulation is the fastest way to develop and debug openwifi's FPGA logic without a board. Feed a recorded or generated IQ file to a testbench, run it in Vivado or Icarus Verilog, then inspect the receiver's signals in the waveform view or dumped text files. You can check each design change before spending an hour synthesizing a bitstream.
+Simulation lets you develop and debug openwifi's FPGA logic without a board. Feed a recorded or generated IQ file to a testbench, run it in Vivado or Icarus Verilog, then inspect the receiver's signals in the waveform view or dumped text files. You can check each design change before spending an hour synthesizing a bitstream.
 
 This page is the deep reference for that environment. For the surrounding build, deploy, and port workflow, see [FPGA Development](FPGA-Development.md). For what each core does, see [FPGA IP Cores](FPGA-IP-Cores.md).
 

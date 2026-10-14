@@ -23,7 +23,7 @@ Unlike a commercial Wi-Fi chip, every layer of openwifi is open and modifiable. 
 - **All the usual roles**: Access Point, client (station), ad-hoc, and monitor mode, all driven by the standard Linux tools.
 - **A real-time low MAC in FPGA**: DCF (CSMA/CA) that meets 802.11 SIFS timing (10 µs in 2.4 GHz, 16 µs in 5 GHz). It includes hardware ACK generation, retransmission, RTS/CTS, and NAV. You can configure or disable each of these for experiments.
 - **Research features** that a commercial chip does not provide. These include per-packet CSI extraction, raw IQ capture with dozens of trigger conditions, and packet injection and fuzzing. There is also a CSI fuzzer for privacy research, full-duplex self-reception ("Wi-Fi as radar"), and time-sliced FPGA transmit queues for [network slicing](sdrctl-and-Runtime-Control.md#time-slicing-network-slicing).
-- **Throughput** in its best configuration (802.11n with A-MPDU aggregation): 40 to 50 Mbps TCP and about 50 Mbps UDP in iperf.
+- **Peak throughput** (802.11n with A-MPDU aggregation): 40 to 50 Mbps TCP and about 50 Mbps UDP in iperf.
 - **RF quality**: EVM around −38 dB, and receiver sensitivity around −92 dBm at MCS0 and −73 dBm at MCS7 (measured with FMCOMMS2 at 2.4 GHz).
 
 See [Specifications](Specifications.md) for the source of these figures and the conditions they describe.

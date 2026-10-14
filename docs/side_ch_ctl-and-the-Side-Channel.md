@@ -134,7 +134,7 @@ So the commands scattered through [the recipes](Research-Features.md) decompose 
 | `rh22` | **r**ead **h**ardware register **22** |
 | `wh1h4001` | **w**rite **h**ardware register **1**, **h**ex, `0x4001` |
 | `wh11d4094` | **w**rite **h**ardware register **11**, **d**ecimal, `4094` |
-| `wh7h01ece28f` | **w**rite **h**ardware register **7**, **h**ex, `0x01ece28f` (a MAC's last 32 bits) |
+| `wh7h01ece28f` | **w**rite **h**ardware register **7**, **h**ex, `0x01ece28f` (the last 32 bits of a MAC address) |
 | `g400` | **g**et captures every **400** ms |
 
 Both radixes work on every register, so the choice is only about readability. The recipes use `h` for the bit-packed registers (1, 5) and for MAC targets (6, 7), where decimal would be unreadable, and `d` for plain counts like `pre_trigger_len`.

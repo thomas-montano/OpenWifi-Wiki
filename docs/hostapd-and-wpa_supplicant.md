@@ -135,7 +135,7 @@ A-MPDU aggregation is **not** a hostapd setting. It is enabled when the driver l
 
 ## Debugging a link that won't come up
 
-Run the daemon in the foreground with verbose output. This is the fastest way to find out whether the problem is above or below the daemon:
+Run the daemon in the foreground with verbose output. Its log shows whether the problem is above or below the daemon:
 
 ```bash
 wpa_supplicant -dd -i sdr0 -c wpa-openwifi.conf     # client

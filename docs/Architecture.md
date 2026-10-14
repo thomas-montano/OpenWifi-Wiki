@@ -190,7 +190,7 @@ The transmit lane runs left to right from Linux out to the antenna, and the rece
   <text x="399" y="245" text-anchor="middle" font-size="12.5" font-weight="700" fill="#4f5bd5">rx_intf</text>
   <text x="399" y="260" text-anchor="middle" font-size="9" fill="currentColor" fill-opacity="0.7">+ metadata · DMA</text>
   <rect x="160" y="224" width="138" height="52" rx="10" fill="#4f5bd5" fill-opacity="0.05" stroke="#4f5bd5" stroke-opacity="0.5" stroke-width="1.3"/>
-  <text x="229" y="245" text-anchor="middle" font-size="12" font-weight="700" fill="#4f5bd5">rx interrupt</text>
+  <text x="229" y="245" text-anchor="middle" font-size="12" font-weight="700" fill="#4f5bd5">RX interrupt</text>
   <text x="229" y="260" text-anchor="middle" font-size="8.5" fill="currentColor" fill-opacity="0.7">openwifi_rx_interrupt</text>
 
   <!-- openofdm_rx hangs off rx_intf -->
@@ -303,7 +303,7 @@ A driver file and its FPGA counterpart usually share a name (`xpu.c` and `xpu.v`
 
 ## Two communication channels between driver and user space
 
-1. **`sdrctl`**: an `nl80211` testmode command, routed through the standard `nl80211 → cfg80211 → mac80211` path and handled by `openwifi_testmode_cmd()` in `sdrctl_intf.c`. Best for issuing commands and reading and writing registers.
-2. **sysfs**: driver variables exposed as virtual files (via `sysfs_intf.c`). Best for statistics and for scripts. On the ZCU102 these files live under `/sys/devices/platform/fpga-axi@0/fpga-axi@0:sdr`, on other boards under `/sys/devices/soc0/fpga-axi@0/fpga-axi@0:sdr`.
+1. **`sdrctl`**: an `nl80211` testmode command, routed through the standard `nl80211 → cfg80211 → mac80211` path and handled by `openwifi_testmode_cmd()` in `sdrctl_intf.c`. Use it to issue commands and to read and write registers.
+2. **sysfs**: driver variables exposed as virtual files (via `sysfs_intf.c`). Use it for statistics and for scripts. On the ZCU102 these files live under `/sys/devices/platform/fpga-axi@0/fpga-axi@0:sdr`, on other boards under `/sys/devices/soc0/fpga-axi@0/fpga-axi@0:sdr`.
 
 [The Linux Driver](Driver-Architecture.md#two-channels-to-user-space) describes both in detail. It also shows how the register category is packed into the upper 16 bits of the address, and which categories never reach the FPGA.

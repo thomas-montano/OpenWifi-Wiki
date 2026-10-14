@@ -73,7 +73,7 @@ Each entry below expands to a short summary and the note's key figures. Use **Re
     ![Dual-antenna collision-capture setup](assets/img/iq_2ant-setup.png)
     ![Dual-antenna capture: rx0 vs rx1](assets/img/iq_2ant-screen-shot.jpg)
 
-??? note "Wi-Fi packet, CSI and IQ self-loopback test"
+??? note "Wi-Fi packet, CSI, and IQ self-loopback test"
     Verify the TX→RX path end-to-end at the packet, CSI, and IQ level, either over the air (antennas close together) or entirely inside the FPGA. The FPGA-internal loopback provides a distortion-free "golden" reference.
 
     [Read more →](Research-Features.md#self-loopback-testing) · [Original note ↗](https://github.com/open-sdr/openwifi/blob/master/doc/app_notes/packet-iq-self-loopback-test.md)

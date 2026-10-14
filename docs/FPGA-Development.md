@@ -2,7 +2,7 @@
 
 This page covers building and modifying the FPGA design in the [openwifi-hw](https://github.com/open-sdr/openwifi-hw) repository.
 
-The design is built **on top of the [Analog Devices HDL reference designs](https://github.com/analogdevicesinc/hdl)** (see the [FPGA overview](FPGA/index.md) for how that fits together and where the [IP Cores](FPGA-IP-Cores.md) reference picks up). For anything that isn't openwifi-specific, the ADI wiki is often the fastest source of answers.
+The design is built **on top of the [Analog Devices HDL reference designs](https://github.com/analogdevicesinc/hdl)** (see the [FPGA overview](FPGA/index.md) for how that fits together and where the [IP Cores](FPGA-IP-Cores.md) reference picks up). For anything that isn't openwifi-specific, check the ADI wiki first.
 
 ## Prerequisites
 
@@ -89,7 +89,7 @@ Make your changes there, then re-integrate into the board design by re-running `
 
 ## Simulating an IP core
 
-Most cores ship a top-level testbench (`*_tb.v`), which is the fastest way to develop without hardware. As a quick start, using `openofdm_rx` as the example:
+Most cores ship a top-level testbench (`*_tb.v`), which lets you develop without hardware. As a quick start, using `openofdm_rx` as the example:
 
 1. Create the IP's Vivado project (as above): `./create_vivado_proj.sh $XILINX_DIR openofdm_rx.tcl`.
 2. In Vivado: *Sources → Simulation Sources → sim_1 → dot11_tb*.

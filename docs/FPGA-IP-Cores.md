@@ -36,7 +36,7 @@ The six cores form a transmit chain and a receive chain that meet at the AD9361 
     <path d="M197,328 H64 V70 H97" marker-end="url(#ipc-arrow)"/>
     <path d="M683,328 H816 V70 H783" marker-end="url(#ipc-arrow)"/>
   </g>
-  <text x="72" y="294" font-size="10" fill="currentColor" fill-opacity="0.75">tx start / done</text>
+  <text x="72" y="294" font-size="10" fill="currentColor" fill-opacity="0.75">TX start / done</text>
   <text x="808" y="294" text-anchor="end" font-size="10" fill="currentColor" fill-opacity="0.75">demod status</text>
 
   <!-- main chain: Linux · tx_intf · DAC · AD9361 · ADC · rx_intf · Linux (y=214) -->

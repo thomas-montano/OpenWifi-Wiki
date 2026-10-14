@@ -1,6 +1,6 @@
 # FPGA
 
-openwifi's hardware lives in the [openwifi-hw](https://github.com/open-sdr/openwifi-hw) repository. It is built **on top of the [Analog Devices HDL reference designs](https://github.com/analogdevicesinc/hdl)**, and openwifi adds its own IP cores and modifications to ADI's board projects. For anything that is not specific to openwifi, the ADI wiki is often the fastest source of answers.
+openwifi's hardware lives in the [openwifi-hw](https://github.com/open-sdr/openwifi-hw) repository. It is built **on top of the [Analog Devices HDL reference designs](https://github.com/analogdevicesinc/hdl)**, and openwifi adds its own IP cores and modifications to ADI's board projects. For anything that is not specific to openwifi, check the ADI wiki first.
 
 | If you want to | Read |
 |---|---|

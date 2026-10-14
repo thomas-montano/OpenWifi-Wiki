@@ -1,0 +1,17 @@
+# Narrow replacement for Google.OxfordComma, which misfires on any
+# ", X and Y" phrase. Only lists of single-word items ("TX, RX and DMA",
+# "26, 27 and 28") are checked, so longer list items are not caught.
+extends: existence
+message: "Use the Oxford comma in '%s'."
+link: 'https://developers.google.com/style/commas'
+scope: sentence
+level: warning
+nonword: true
+tokens:
+  # Skips a comma that closes a fronted clause or phrase ("If it fails, reboot
+  # and retry", "On other boards, reads and writes ..."). Item 1 must not open
+  # the sentence or be an introductory word ("For example, X and Y"). Item 2
+  # must not start a new clause. Items are all words or all numbers, so
+  # "board, 100 or 200 MHz" is not a list. A comma soon after item 3 means the
+  # "X and Y" is one item of a longer list ("puncturing and interleaving, ...").
+  - '(?<!^(?i:when|whenever|while|if|unless|until|although|though|because|since|after|before|once|whereas|whether|as|on|in|at|for|with|without|by|from|during|to|under|over|via)\b[^,]{0,80})(?<=\S\s)(?:(?!(?i:example|instance|default|short|contrast|practice|addition|general|particular|turn|otherwise|however|instead|also|then|now|here|there|finally|first|second|third|next|again|yes|no)\b)[A-Za-z][\w-]*, (?!(?i:and|or|but|so|then|which|who|that|i|you|we|they|it|he|she)\b)[A-Za-z][\w-]*|\d[\d.]*, \d[\d.]*) (?:and|or) (?>[\w-]+)(?!(?: [\w-]+){0,3},)'

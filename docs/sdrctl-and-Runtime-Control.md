@@ -208,7 +208,7 @@ Two more parameters exist in `sdrctl` but are easy to misread. Neither is docume
 
 | `para_name` | What it does |
 |---|---|
-| `rssi_th` | `get rssi_th` prints the current CCA threshold as a positive number *N*, meaning −*N* dBm. It reads `xpu` register 8. `set rssi_th` is disabled. It returns an error, and the driver log tells you to use `drv_xpu` register 0 instead (see [CCA threshold](#cca-threshold-listen-before-talk)). |
+| `rssi_th` | `get rssi_th` prints the current CCA threshold as a positive number *N*, meaning −*N* dBm. It reads `xpu` register 8. `set rssi_th` is disabled. It returns an error, and the driver logs a message pointing to `drv_xpu` register 0 instead (see [CCA threshold](#cca-threshold-listen-before-talk)). |
 | `gap` | The `sdrctl` help text calls this the inter-frame gap in µs. However, the driver writes the value straight into `xpu` register 19, the per-queue CW minimum and maximum. `get gap` reads the same register. Linux rewrites register 19 whenever it configures the TX queues, so use [`cw_max_min_cfg.sh`](#csmaca-internals-nav-difs-eifs-cw) for a lasting CW override. |
 
 ---
@@ -338,7 +338,7 @@ Prefer this dBm setting (`drv_xpu` register 0, or `set_lbt_th.sh` above) to tune
 | 28 / 29 | BSSID filter low 32 / high 16 bits (auto-set) |
 | 30 / 31 | Self MAC address low 32 / high 16 bits (auto-set) |
 | 57 | `rssi_half_db` (signal strength in units of 0.5 dB) read-back with channel idle and CSMA state (pair with `rssi_openwifi_show.sh` or `rssi_ad9361_show.sh`) |
-| 58 / 59 | TSF runtime value, low and high word (read-only) |
+| 58 / 59 | TSF runtime value, low word / high word (read-only) |
 | 62 | addr2 of the last RX packet, read back (bits31-0 from addr2 bits47-16) |
 | 63 | Git revision of the FPGA build (hex) |
 
