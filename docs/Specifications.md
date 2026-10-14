@@ -21,7 +21,7 @@ Every figure carries a **footnote** that points to its source so you can check i
 | AD9361 ↔ FPGA sample rate | 40 Msps (decimated and interpolated to 20 Msps in the FPGA)[^docreadme] |
 | FPGA baseband clock | 100 MHz default (up to 200 or 240 MHz on high-end boards)[^tcl][^boards] |
 | Max PHY rate (open source) | 72.2 Mbps (MCS7, 400 ns short guard interval, theoretical)[^11n] |
-| Measured throughput (iperf) | TCP 40–50 Mbps, UDP ~50 Mbps[^readme] |
+| Measured throughput (iperf) | TCP 40–50 Mbps, UDP ~50 Mbps, best case with A-MPDU on[^readme] |
 | TX EVM | −38 dB[^readme] |
 | RX sensitivity | −92 dBm @ MCS0, −73 dBm @ MCS7[^readme] |
 | Real-time MAC (low MAC) | DCF (CSMA/CA), hardware ACK, retransmission, RTS/CTS, NAV, all in FPGA[^readme] |
@@ -87,15 +87,17 @@ openwifi's real-time "low MAC" (the `xpu` core) runs the DCF (CSMA/CA) state mac
 
 ## Measured performance
 
-These are openwifi's published bring-up numbers, measured over cable and over the air on **FMCOMMS2 at 2.4 GHz**.[^readme] Your results depend on board, RF path, and configuration.
+These are openwifi's published numbers.[^readme] Upstream gives the throughput figures as a best case, with A-MPDU aggregation on. The EVM and sensitivity figures were measured on **FMCOMMS2 at 2.4 GHz**, over cable and over the air. Your results depend on board, RF path, and configuration.
 
 | Metric | Value | Conditions |
 |---|---|---|
-| TCP throughput (iperf) | 40–50 Mbps | 802.11n[^readme] |
-| UDP throughput (iperf) | ~50 Mbps | 802.11n[^readme] |
-| TX EVM | −38 dB | FMCOMMS2, 2.4 GHz[^readme] |
-| RX sensitivity @ MCS0 | −92 dBm | FMCOMMS2, 2.4 GHz[^readme] |
-| RX sensitivity @ MCS7 | −73 dBm | FMCOMMS2, 2.4 GHz[^readme] |
+| TCP throughput (iperf) | 40–50 Mbps | 802.11n, A-MPDU on (best case)[^readme] |
+| UDP throughput (iperf) | ~50 Mbps | 802.11n, A-MPDU on (best case)[^readme] |
+| TX EVM | −38 dB | FMCOMMS2, 2.4 GHz, cable and over the air[^readme] |
+| RX sensitivity @ MCS0 | −92 dBm | FMCOMMS2, 2.4 GHz, cable and over the air[^readme] |
+| RX sensitivity @ MCS7 | −73 dBm | FMCOMMS2, 2.4 GHz, cable and over the air[^readme] |
+
+To measure throughput on your own link, see [Link Testing with iperf](Link-Testing-with-iperf.md).
 
 ## FPGA implementation
 

@@ -200,7 +200,7 @@ Values 0 to 3 select the slice that later commands configure. The value 4 commit
 !!! warning "`slice_cfg.sh` is out of date"
     `user_space/slice_cfg.sh` wraps these commands, but it calls per-slice names such as `set addr0` and `set slice_total0`. The current `sdrctl` has no such commands, so the script fails. Run the commands above directly instead.
 
-The imec [w-iLab.t tutorial](https://doc.ilabt.imec.be/ilabt/wilab/tutorials/openwifi.html#sdr-tx-time-slicing) has a fuller walkthrough.
+The imec [w-iLab.t tutorial](https://doc.ilabt.imec.be/ilabt/wilab/tutorials/openwifi.html#sdr-tx-time-slicing) has a fuller walkthrough. To check the airtime split with real traffic, see [Checking time slicing](Link-Testing-with-iperf.md#checking-time-slicing).
 
 ## Other `sdrctl` parameters
 
@@ -361,4 +361,4 @@ The driver also exposes per-packet counters through sysfs. Use these scripts to 
 ./stat_enable.sh 0               # turn statistics off
 ```
 
-The counter names match variable names in `sdr.c`, so grepping the source shows you the precise meaning. There are also FPGA-level event counters exposed through the side channel, see [Research Features](Research-Features.md#fpga-event-counters).
+The counter names match variable names in `sdr.c`, so grepping the source shows you the precise meaning. There are also FPGA-level event counters exposed through the side channel, see [Research Features](Research-Features.md#fpga-event-counters). To read the counters around a throughput test, see [Reading iperf3 together with the counters](Link-Testing-with-iperf.md#reading-iperf3-together-with-the-counters).

@@ -39,7 +39,7 @@ ADI('s)?
 imec
 NLnet
 Wireshark
-iperf
+iperf3?
 arXiv
 
 # Boards and platforms
@@ -139,6 +139,7 @@ hardcoded
 interoperates
 journald
 loopback
+goodput
 lossy
 menuconfig
 Kconfig

@@ -160,6 +160,7 @@ nav:
       - hostapd & wpa_supplicant: hostapd-and-wpa_supplicant.md
       - Wi-Fi 4 & Wi-Fi 6 Features: Wi-Fi-4-and-Wi-Fi-6.md
       - sdrctl & Runtime Control: sdrctl-and-Runtime-Control.md
+      - Link Testing with iperf: Link-Testing-with-iperf.md
   - Developing:
       - Environment Setup: Development-Environment-Setup.md
       - Software:

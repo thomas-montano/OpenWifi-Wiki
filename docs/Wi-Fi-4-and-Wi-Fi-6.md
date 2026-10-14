@@ -238,6 +238,8 @@ The `1` becomes the `test_mode` module parameter of `sdr.ko`. With bit 0 set, th
 !!! warning "Experimental"
     Aggregation is documented as experimental.[^docreadme] Try it first when you want more throughput, and turn it off first when you are investigating instability.
 
+To measure the gain on your own link, see [Comparing feature settings](Link-Testing-with-iperf.md#comparing-feature-settings).
+
 ### Short guard interval
 
 802.11n's short GI halves the guard interval from 800 to 400 ns, trading multipath margin for about 11% more throughput.[^std] That trade is usually safe on short, clean links (a lab bench, a cabled setup) and riskier in reflective environments.
@@ -295,7 +297,7 @@ A capture with `tcpdump` on a monitor interface shows the same information in th
 ### Limitations to plan around
 
 - **One spatial stream, 20 MHz, always.** The 72.2 Mbps ceiling is a hard PHY limit of the open-source design. The two antennas on a board are separate TX and RX paths for isolation, not MIMO.
-- **Throughput in practice is about 50 Mbps**, well below the 72.2 Mbps PHY rate. Preambles, ACKs, and contention take their share even with aggregation.[^readme]
+- **Throughput in practice is about 50 Mbps**, well below the 72.2 Mbps PHY rate. Preambles, ACKs, and contention take their share even with aggregation.[^readme] [Link Testing with iperf](Link-Testing-with-iperf.md) shows how to measure it.
 - **Short GI is off by default** at the capability level, so a default link peaks at 65 Mbps PHY rate.
 - **A-MSDU is absent and A-MPDU is experimental**, so a commercial peer that relies on aggressive aggregation defaults reaches a higher rate than an openwifi link.
 - **No 802.11b compatibility.** In the 2.4 GHz band, legacy clients and management-frame fallbacks cause problems. See [About 802.11b](Operating-Modes.md#about-80211b).

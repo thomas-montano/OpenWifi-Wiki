@@ -120,6 +120,8 @@ The shipped `hostapd-openwifi.conf` defaults to **channel 36 (5 GHz)**. If your 
 
 The ADRV9361-Z7035 has very low TX power in the 5 GHz band, so keep devices close when using that board on 5 GHz.
 
+To measure throughput over the new link, run the [iperf3 quick check](Link-Testing-with-iperf.md#quick-check).
+
 ## 5. Give clients internet access (optional)
 
 The board has no internet uplink, so route client traffic through your PC.

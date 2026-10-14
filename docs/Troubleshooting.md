@@ -77,6 +77,10 @@ iw dev wlan0 get power_save
 sudo iw dev wlan0 set power_save off
 ```
 
+### Throughput far below expected
+
+The published figures (TCP 40 to 50 Mbps, UDP about 50 Mbps) need A-MPDU aggregation, so load the driver with `./wgd.sh 1`. Also make sure the test traffic crosses the Wi-Fi link and not the Ethernet link. The [iperf pitfalls table](Link-Testing-with-iperf.md#pitfalls) lists the other common causes.
+
 ### Ping-by-hostname fails (DNS)
 
 Set `nameserver 8.8.8.8` in `/etc/resolv.conf` on the board.

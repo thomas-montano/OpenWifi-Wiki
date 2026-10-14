@@ -50,6 +50,7 @@ The most common cycle is changing driver code and testing it on the board. Once 
 4. On the board: `./wgd.sh` reloads the modules live. Make sure `system_top.bit.bin` is **not** in the directory unless you also want the FPGA image reloaded ([details](#reloading-driver-and-fpga-without-rebooting)).
 5. Check it loaded: `dmesg | tail -20` should show the driver initializing without symbol/version errors (if it does show them, see [the note on kernel mismatch](#rebuilding-the-driver)), and `ip a` should list `sdr0`.
 6. Reloading recreates `sdr0` from scratch, so restart whatever mode you were in: AP (`hostapd` / `fosdem.sh`), client (`wpa_supplicant`), or your monitor-mode setup ([Operating Modes](Operating-Modes.md)).
+7. For changes that can affect the data path, rerun your throughput baseline (see the [iperf regression check](Link-Testing-with-iperf.md#regression-check-after-a-driver-or-fpga-change)).
 
 For print-style debugging, add `printk` calls in the driver and watch them live on the board with `dmesg -w` in a second ssh session.
 
@@ -136,7 +137,7 @@ This makes it easy to keep, share, and switch between variants. To build a varia
 
 ### test_mode
 
-`insmod sdr.ko test_mode=<value>` (or passing the value to `wgd.sh` or `fosdem.sh`) toggles experimental features via the `test_mode` global in `sdr.c`. Two bits are in use. **Bit 0 turns on A-MPDU aggregation** (default off), so `./wgd.sh 1` gives you aggregation. **Bit 1 advertises the short guard interval**, which only the driver source documents. See [Wi-Fi 4 & Wi-Fi 6 Features](Wi-Fi-4-and-Wi-Fi-6.md#short-guard-interval) for both in practice.
+`insmod sdr.ko test_mode=<value>` (or passing the value to `wgd.sh`) toggles experimental features via the `test_mode` global in `sdr.c`. Upstream `doc/README.md` says `fosdem.sh` also accepts the value, but the `test_mode` lines in [`fosdem.sh`](https://github.com/open-sdr/openwifi/blob/master/user_space/fosdem.sh) are commented out, so it has no effect there. Two bits are in use. **Bit 0 turns on A-MPDU aggregation** (default off), so `./wgd.sh 1` gives you aggregation. **Bit 1 advertises the short guard interval**, which only the driver source documents. See [Wi-Fi 4 & Wi-Fi 6 Features](Wi-Fi-4-and-Wi-Fi-6.md#short-guard-interval) for both in practice.
 
 ## Rebuilding sdrctl
 
