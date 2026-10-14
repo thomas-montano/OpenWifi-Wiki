@@ -86,7 +86,7 @@ The driver clamps `iq_len_init` to **8187** (derived below). It does not know ab
 
 ### Small-BRAM boards
 
-Zynq-7020 boards (ZedBoard, ADRV9364-Z7020, ZC702, antsdr, e310v2, antsdr_e200, sdrpi, neptunesdr, LibreSDR) build `side_ch` with the `SIDE_CH_LESS_BRAM` macro, halving the capture FIFO from 8192 to 4096 symbols. On those boards keep `iq_len_init` ≤ **4095**, and fix the pre-trigger length yourself, because the driver's default of 8190 overshoots the smaller FIFO:
+Zynq-7020 boards (ZedBoard, ADRV9364-Z7020, ZC702, antsdr, e310v2, antsdr_e200, sdrpi, neptunesdr, LibreSDR, plutosky_r2) build `side_ch` with the `SIDE_CH_LESS_BRAM` macro, halving the capture FIFO from 8192 to 4096 symbols. On those boards keep `iq_len_init` ≤ **4095**, and fix the pre-trigger length yourself, because the driver's default of 8190 overshoots the smaller FIFO:
 
 ```bash
 insmod side_ch.ko iq_len_init=4095

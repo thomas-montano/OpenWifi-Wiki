@@ -39,6 +39,7 @@
 *[DCF]: Distributed Coordination Function: the standard's CSMA/CA-based channel-access method.
 *[DCM]: Dual Carrier Modulation: an optional 802.11ax mode that duplicates data across subcarrier pairs for robustness.
 *[DCXO]: Digitally controlled crystal oscillator: the AD9361's tunable reference crystal.
+*[DFU]: Device Firmware Upgrade: the USB protocol for writing firmware to a device, used to flash the PlutoSky R2.
 *[DHCP]: Dynamic Host Configuration Protocol: assigns IP addresses on a network.
 *[DNS]: Domain Name System: resolves host names to IP addresses.
 *[DDR]: Double Data Rate SDRAM: the board's main memory, initialized by the FSBL at boot.
@@ -57,6 +58,7 @@
 *[FDD]: Frequency Division Duplex: openwifi drives the AD9361 in FDD but with identical TX/RX frequencies.
 *[FEC]: Forward Error Correction: the convolutional coding used by 802.11 OFDM, decoded by Viterbi.
 *[FFT]: Fast Fourier Transform: the receiver operation that recovers OFDM subcarriers.
+*[FIT]: Flattened Image Tree: a U-Boot image format that bundles the kernel, device tree, and other files into one file.
 *[FIFO]: First In, First Out: a hardware queue buffer between FPGA cores.
 *[IFFT]: Inverse Fast Fourier Transform: builds the OFDM time-domain signal from subcarriers.
 *[FMC]: FPGA Mezzanine Card: a standard connector/daughter-card form factor.
@@ -110,6 +112,8 @@
 *[OFDMA]: Orthogonal Frequency-Division Multiple Access: the 802.11ax feature (not in the open-source release).
 *[openofdm]: The open-source 802.11 OFDM receiver openwifi's openofdm_rx core is based on.
 *[OpenWrt]: The router-focused embedded Linux distribution. openwifi ships as an OpenWrt kernel module.
+*[OTG]: USB On-The-Go: a USB port that can act as a device, used for networking and a console on some boards.
+*[PA]: Power amplifier: the RF stage that boosts the transmit signal before the antenna.
 *[PER]: Packet Error Rate: the fraction of packets lost or received in error.
 *[PHY]: The physical layer: modulation, coding, and RF (openofdm cores plus the AD9361).
 *[PL]: Programmable Logic: the FPGA-fabric half of a Xilinx Zynq SoC.
@@ -118,6 +122,8 @@
 *[PMUFW]: Platform Management Unit Firmware: a ZynqMP-specific boot component (ZCU102).
 *[PPS]: Pulse Per Second: a once-a-second timing signal (typically from GPS).
 *[QSPI]: Quad SPI: the flash interface some boards can boot from.
+*[RGMII]: Reduced Gigabit Media-Independent Interface: the link between an Ethernet MAC and its PHY chip.
+*[RNDIS]: Remote Network Driver Interface Specification: a USB networking protocol that Windows supports natively.
 *[RF]: Radio frequency: the analog wireless signal, as opposed to digital baseband.
 *[RSSI]: Received Signal Strength Indicator: an estimate of received power (per-packet in openwifi).
 *[RTC]: Real-Time Clock: keeps wall-clock time across reboots.

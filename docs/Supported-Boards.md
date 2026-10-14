@@ -22,7 +22,7 @@ openwifi runs on **Xilinx Zynq-7000 and Zynq UltraScale+ (MPSoC)** boards. Nearl
 | `neptunesdr` | Low-cost Zynq-7020 + AD9361 board | Zynq-7020 | No | **Unofficial**, community supported |
 | `rfsoc4x2` | AMD RFSoC4x2 | Zynq UltraScale+ RFSoC | **Yes** | **Driver support only.** No public FPGA project, boot files, or bitstream. See the note below. |
 | `LibreSDR` | Low-cost Zynq-7020 + AD9361 board | Zynq-7020 | No | **Unofficial**, external repo [openwifi-libresdr](https://github.com/pavelyazev/openwifi-libresdr) |
-| `plutosky_r2` | PlutoSky R2 + AD9361, on-board ADF4001 PLL | Zynq-7020 | No | DDR3, GEM0 RGMII Ethernet. Prebuilt bitstream only. No boot files in `openwifi/kernel_boot/boards/`, so you cannot build a full SD image from the public repositories. |
+| `plutosky_r2` | PlutoSky R2 (AD9361, on-board ADF4001 PLL) | Zynq-7020 | No | **Boots from QSPI flash**, not an SD card. Buildroot only, 2.4 GHz only. See [PlutoSky R2](#plutosky-r2-qspi-boot) below. |
 
 The **Vivado license** column only matters if you rebuild the FPGA from source. The [prebuilt bitstreams](https://github.com/open-sdr/openwifi-hw-img) run on any board with no license. Boards on the Zynq-7020 qualify for the free Vivado tier.
 
@@ -76,12 +76,50 @@ A Zynq-7020 + AD936x SDR in a **Raspberry-Pi form factor**.
 | RF front end | FMCOMMS3-based, with an added RF amplifier |
 | Timing | u-blox M8T GPS module and a 40 MHz VCXO |
 
+## PlutoSky R2 (QSPI boot)
+
+The PlutoSky R2 pairs a Zynq-7020 with an AD9361. Unlike every other board, it boots from **QSPI flash**, not from an SD card. You build its image with [Buildroot](Building-SD-Images.md#plutosky-r2-qspi-image) and write it to flash as a `.dfu` file. The Kuiper and OpenWrt images and `update_sdcard.sh` do not apply to it. The board files are in [`kernel_boot/boards/plutosky_r2/`](https://github.com/open-sdr/openwifi/tree/master/kernel_boot/boards/plutosky_r2).
+
+| Spec | Value |
+|---|---|
+| SoC | Zynq `xc7z020clg484-2` |
+| Memory | DDR3 |
+| Ethernet | PS-side GEM0 over RGMII |
+| USB | OTG port with RNDIS networking and a serial console |
+| RF front end | AD9361 behind a TC1-1-13MX+ balun, no PA |
+| Clocking | On-board ADF4001 PLL |
+
+The QSPI flash holds two partitions that matter:
+
+| Partition | Offset | Contents |
+|---|---|---|
+| `qspi-fsbl-uboot` | `0x0` (1 MiB) | The factory FSBL and U-Boot. openwifi does not build or ship them. |
+| `qspi-linux` (`/dev/mtd3`) | `0x200000` | The openwifi FIT image: bitstream, `zImage`, device tree, and `rootfs.cpio.gz`, at most `0x1e00000` (30 MiB) |
+
+A normal update writes only `qspi-linux` and leaves the factory boot chain in place. Flash over USB with the board in DFU mode:
+
+```bash
+dfu-util -d 0456:b673,0456:b674 -D openwifi-plutosky_r2-qspi.dfu -a firmware.dfu
+```
+
+On a board that already runs Linux, you can write the same file from the board. `tools/mtd_flash_write` erases the partition, writes the image, and reads it back to verify:
+
+```bash
+mtd_flash_write openwifi-plutosky_r2-qspi.dfu /dev/mtd3
+```
+
+!!! warning "Do not overwrite the QSPI boot chain"
+    The board needs its factory FSBL and U-Boot at offset 0. The factory image is not in the repository because it is not redistributable. `build_qspi_fsbl.tcl` and `build_qspi_boot.ps1` build a replacement from source, but the BootROM rejects it and the serial console stays silent. `flash_plutosky_r2_qspi.tcl` writes that image to offset 0 over JTAG and refuses to run unless `OPENWIFI_FLASH_ACK=I_UNDERSTAND` is set. It exists for work on the boot problem, not for updating openwifi. If you overwrite the boot chain, `restore_factory_qspi_boot.tcl` and `restore_factory_dfu.cmd` put the factory firmware back.
+
+You reach the board over the USB OTG link. The board is `192.168.2.1` on that link and does not hand out addresses, so give the host adapter a static address in the same /24, such as `192.168.2.2` with mask `255.255.255.0`. Leave the gateway empty, because the board does not route. The same OTG port carries a serial console (`ttyGS0` on the board, 115200 baud). On Windows the built-in RNDIS driver handles the link.
+
 ## Board bring-up quirks worth knowing up front
 
 - **ADRV9361-Z7035 low 5 GHz TX power.** Keep nodes close (or plan for attenuation) when testing this board at 5 GHz. This is called out in nearly every [Operating Modes](Operating-Modes.md) walkthrough.
 - **ZCU102 differs from every other board.** It is the only 64-bit (Zynq UltraScale+) board with public images. It uses a different boot chain, with ARM Trusted Firmware BL31 and PMU firmware built by `build_zynqmp_boot_bin.sh`. Its device tree is `system.dts` instead of `devicetree.dts`. It can also hit SD card, RTC, and SODIMM module issues (see [Troubleshooting](Troubleshooting.md)).
 - **neptunesdr** sometimes shows an [`EXT4-fs error` on first boot](Troubleshooting.md#ext4-fs-error-device-mmcblk0p2-on-first-boot). Re-flash with a different imaging tool.
 - **CH341-based UART adapters** (antsdr_e200 and others) may need `sudo apt remove brltty` before [the console device appears](Troubleshooting.md#no-uart-console-device-appears).
+- **PlutoSky R2 is 2.4 GHz only.** Its RF front end is a TC1-1-13MX+ balun with no PA, and the passband rolls off above 3 GHz. Upstream has tested only 2.4 GHz and does not expect 5 GHz to work.
 
 ## The baseband clock per board
 
