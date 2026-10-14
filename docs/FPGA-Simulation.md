@@ -97,7 +97,7 @@ When the simulation opens, Vivado shows three panes that you use together:
 - The **wave window** plots the signals you add. Drag them in from **Objects**, or right-click a signal and choose *Add to Wave Window*.
 
 !!! warning "Signals added after the run have no history"
-    The simulator records a signal's history only while the signal is in the wave window or logged. A signal that you add after `run all` shows nothing for the time already simulated. After you add signals, restart and run again. Alternatively, log every signal before the run:
+    While the simulation runs, Vivado records values only for the signals that are in the wave window or that you logged with `log_wave`. If you add a signal after the run, its waveform is empty for all the time that has already been simulated. To see it, restart the simulation and run it again. To avoid the problem, log every signal before you run:
 
     ```tcl
     restart
