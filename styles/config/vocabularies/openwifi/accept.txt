@@ -48,6 +48,7 @@ RFSoC('s)?
 antsdr
 neptunesdr
 sdrpi
+PlutoSky
 
 # Cited authors and handles
 Jiao
@@ -83,6 +84,8 @@ fuzzer('s)?
 defeatable
 beaconing
 backhaul
+baluns?
+passbands?
 demodulator('s)?
 demod
 descrambl(e|es|er|ing)
@@ -132,6 +135,8 @@ connectionless
 datasheets?
 datagrams?
 datapath
+initramfs
+redistributable
 decompil(e|ed|es|ing)
 desynchronizes
 dmesg

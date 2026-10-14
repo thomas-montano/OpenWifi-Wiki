@@ -4,7 +4,7 @@ openwifi boots from an SD card running one of three base operating systems, and 
 
 - **ADI Kuiper**: an image similar to Debian or Ubuntu (the classic openwifi environment, and what the `fosdem.sh` demo and most app notes assume).
 - **OpenWrt**: a router-style image with the LuCI web UI, with openwifi packaged as a kernel module.
-- **Buildroot**: a small, fast-booting, reproducible image aimed at deployment, for the MicroPhase ANTSDR boards (`antsdr_e200`, `antsdr`, `e310v2`). See [Buildroot](#buildroot) below.
+- **Buildroot**: a small, fast-booting, reproducible image aimed at deployment, for the MicroPhase ANTSDR boards (`antsdr_e200`, `antsdr`, `e310v2`) and the PlutoSky R2 (`plutosky_r2`). The PlutoSky R2 boots from QSPI flash instead of an SD card. See [Buildroot](#buildroot) below.
 
 !!! tip "You may not need to build anything"
     Prebuilt images exist for Kuiper and OpenWrt. If you only need a working board, flash a prebuilt image as in [Getting Started](Getting-Started.md) (Kuiper) or the [OpenWrt quick start](#openwrt-quick-start-prebuilt-image) below. Build from scratch when you need a custom kernel, a new board, or an image you control end to end.
@@ -19,7 +19,7 @@ The builds below assume you understand the [boot chain and device tree](Boot-Ker
 | Suited to | Research, the app-note workflows, full apt tooling | Router use cases | Small, reproducible deployment images |
 | Build needs | Vivado 2022.2 + Vitis | Docker only (no Vivado) | Buildroot host packages + a prebuilt XSA (no Vivado) |
 | openwifi tools | Built on the board | Packaged into the image (in `$PATH`) | Built into the image under `/root/openwifi` |
-| Boards | All supported boards | Most supported boards | `antsdr_e200`, `antsdr`, `e310v2` |
+| Boards | All supported boards except `plutosky_r2` | Most supported boards | `antsdr_e200`, `antsdr`, `e310v2`, `plutosky_r2` (QSPI flash) |
 
 ---
 
@@ -325,15 +325,16 @@ Buildroot produces a small (about 169 MB), fast-booting, reproducible SD image a
 
 ### Board support
 
-Buildroot targets three ANTSDR boards, all booted and tested on real hardware:
+Buildroot targets four boards, all booted and tested on real hardware:
 
 | Build name | Hardware | Serial console | RAM |
 |---|---|---|---|
 | `antsdr_e200` | ANTSDR-E200 | `ttyPS0` | 512 MiB |
 | `antsdr` | ANTSDR-E310/ANT | `ttyPS0` | 1 GiB |
 | `e310v2` | ANTSDR-E310V2 | `ttyPS0` | 1 GiB |
+| `plutosky_r2` | PlutoSky R2 | `ttyPS0`, and `ttyGS0` over USB OTG | 1 GiB |
 
-All three share one kernel, module set, and ext4 root filesystem. Only the BOOT artifacts (SPL and U-Boot, device tree, bitstream, PS init, and UART selection) are per board.
+The three ANTSDR boards share one kernel, module set, and ext4 root filesystem. Only the BOOT artifacts (SPL and U-Boot, device tree, bitstream, PS init, and UART selection) are per board. The PlutoSky R2 boots from QSPI flash and has its own build profile, described in [PlutoSky R2 QSPI image](#plutosky-r2-qspi-image).
 
 !!! info "Different boot chain from Kuiper"
     On Buildroot, `BOOT.BIN` is the U-Boot SPL, not the Xilinx FSBL composite Kuiper uses, so it needs the separate `u-boot.img`, and **U-Boot configures the FPGA before Linux starts**. Do not mix BOOT files between the two schemes by name alone. Buildroot does not use `update_sdcard.sh`, `prepare_kernel.sh`, or `boot_bin_gen.sh`.
@@ -364,7 +365,7 @@ Run from the openwifi repository root. The first build compiles the shared syste
 ./buildroot-build.sh e310v2 build
 ```
 
-Each board build produces an SD image and a complete-system update package:
+Each ANTSDR board build produces an SD image and a complete-system update package:
 
 ```text
 output/antsdr_e200/images/openwifi-antsdr_e200-sdcard.img
@@ -407,6 +408,23 @@ Each board build also creates a `.frm` package (about 20 MB) with all BOOT files
 ```
 
 The package validates board identity, sizes, and SHA-256 digests, and it rejects a package built for a different board. It replaces the single active rootfs in place, so the update always reboots and has no automatic power-loss rollback. Keep power stable during the write.
+
+### PlutoSky R2 QSPI image
+
+The PlutoSky R2 boots from QSPI flash, so its build differs from the ANTSDR boards in two ways:
+
+- It uses its own system profile, `buildroot-external/configs/openwifi_plutosky_r2.fragment`. The profile adds a compressed initramfs root filesystem (`rootfs.cpio.gz`) and FIT support in the host `mkimage`. When you switch `buildroot-build.sh` between `plutosky_r2` and an ANTSDR board, it rebuilds Linux and the openwifi packages.
+- The output is a `.dfu` FIT image for the `qspi-linux` flash partition (`/dev/mtd3`), with no SD image and no `.frm` package. The `.frm` installer needs `/boot` and `/dev/mmcblk0p2`, which this board does not have.
+
+```bash
+./buildroot-build.sh plutosky_r2 build
+```
+
+```text
+output/plutosky_r2/images/openwifi-plutosky_r2-qspi.dfu
+```
+
+The build reads the XSA from `openwifi-hw-img` by default, like the other boards. To use your own `openwifi-hw/boards/plutosky_r2` build instead, set `OPENWIFI_XSA` to the absolute path of its `system_top.xsa`. To flash the image and connect to the board, see [Supported Boards → PlutoSky R2](Supported-Boards.md#plutosky-r2-qspi-boot).
 
 ## Related pages
 
