@@ -6,6 +6,7 @@
 *[AMPDU]: Aggregated MAC Protocol Data Unit: an 802.11n frame-aggregation method (experimental in openwifi).
 *[A-MSDU]: Aggregated MAC Service Data Unit: the other 802.11n aggregation method (not supported by openwifi).
 *[AD9361]: Analog Devices RF transceiver chip openwifi uses as its radio front end (70 MHz to 6 GHz).
+*[AD9363]: Lower-cost variant of the AD9361 RF transceiver (officially 325 MHz to 3.8 GHz, 20 MHz bandwidth).
 *[AD9364]: Single-channel variant of the AD9361 RF transceiver.
 *[ADC]: Analog-to-Digital Converter: turns the analog RF signal into digital IQ samples.
 *[DAC]: Digital-to-Analog Converter: turns digital IQ samples back into an analog signal.

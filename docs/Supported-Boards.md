@@ -22,7 +22,7 @@ openwifi runs on **Xilinx Zynq-7000 and Zynq UltraScale+ (MPSoC)** boards. Nearl
 | `neptunesdr` | Low-cost Zynq-7020 + AD9361 board | Zynq-7020 | No | **Unofficial**, community supported |
 | `rfsoc4x2` | AMD RFSoC4x2 | Zynq UltraScale+ RFSoC | **Yes** | **Driver support only.** No public FPGA project, boot files, or bitstream. See the note below. |
 | `LibreSDR` | Low-cost Zynq-7020 + AD9361 board | Zynq-7020 | No | **Unofficial**, external repo [openwifi-libresdr](https://github.com/pavelyazev/openwifi-libresdr) |
-| `plutosky_r2` | PlutoSky R2 (AD9361, on-board ADF4001 PLL) | Zynq-7020 | No | **Boots from QSPI flash**, not an SD card. Buildroot only, 2.4 GHz only. See [PlutoSky R2](#plutosky-r2-qspi-boot) below. |
+| `plutosky_r2` | PlutoSky R2 (AD9361 or AD9363, on-board ADF4001 PLL) | Zynq-7020 | No | **Boots from QSPI flash**, not an SD card. Buildroot only, 2.4 GHz only. See [PlutoSky R2](#plutosky-r2-qspi-boot) below. |
 
 The **Vivado license** column only matters if you rebuild the FPGA from source. The [prebuilt bitstreams](https://github.com/open-sdr/openwifi-hw-img) run on any board with no license. Boards on the Zynq-7020 qualify for the free Vivado tier.
 
@@ -78,16 +78,19 @@ A Zynq-7020 + AD936x SDR in a **Raspberry-Pi form factor**.
 
 ## PlutoSky R2 (QSPI boot)
 
-The PlutoSky R2 pairs a Zynq-7020 with an AD9361. Unlike every other board, it boots from **QSPI flash**, not from an SD card. You build its image with [Buildroot](Building-SD-Images.md#plutosky-r2-qspi-image) and write it to flash as a `.dfu` file. The Kuiper and OpenWrt images and `update_sdcard.sh` do not apply to it. The board files are in [`kernel_boot/boards/plutosky_r2/`](https://github.com/open-sdr/openwifi/tree/master/kernel_boot/boards/plutosky_r2).
+The PlutoSky R2 pairs a Zynq-7020 with an AD9361 or AD9363. The vendor sells it with either chip, each with or without a PA. Upstream openwifi names the AD9361 and describes a model without a PA, so treat the AD9363 and PA models as untested. Unlike every other board, openwifi boots it from **QSPI flash**. The board has an SD card slot, but the openwifi build does not use it. You build its image with [Buildroot](Building-SD-Images.md#plutosky-r2-qspi-image) and write it to flash as a `.dfu` file. The Kuiper and OpenWrt images and `update_sdcard.sh` do not apply to it. The board files are in [`kernel_boot/boards/plutosky_r2/`](https://github.com/open-sdr/openwifi/tree/master/kernel_boot/boards/plutosky_r2).
 
 | Spec | Value |
 |---|---|
 | SoC | Zynq `xc7z020clg484-2` |
-| Memory | DDR3 |
-| Ethernet | PS-side GEM0 over RGMII |
+| Memory | 1 GB DDR3 |
+| Flash | 32 MB QSPI |
+| Ethernet | GEM0 over RGMII, routed to a PL-side port |
 | USB | OTG port with RNDIS networking and a serial console |
-| RF front end | AD9361 behind a TC1-1-13MX+ balun, no PA |
+| RF front end | AD9361 or AD9363 behind a TC1-1-13MX+ balun, PA on some models |
 | Clocking | On-board ADF4001 PLL |
+
+The memory size, flash size, and model options come from the [vendor product page](https://opensourcesdrlab.com/products/plutosky-r2).
 
 The QSPI flash holds two partitions that matter:
 
@@ -119,7 +122,7 @@ You reach the board over the USB OTG link. The board is `192.168.2.1` on that li
 - **ZCU102 differs from every other board.** It is the only 64-bit (Zynq UltraScale+) board with public images. It uses a different boot chain, with ARM Trusted Firmware BL31 and PMU firmware built by `build_zynqmp_boot_bin.sh`. Its device tree is `system.dts` instead of `devicetree.dts`. It can also hit SD card, RTC, and SODIMM module issues (see [Troubleshooting](Troubleshooting.md)).
 - **neptunesdr** sometimes shows an [`EXT4-fs error` on first boot](Troubleshooting.md#ext4-fs-error-device-mmcblk0p2-on-first-boot). Re-flash with a different imaging tool.
 - **CH341-based UART adapters** (antsdr_e200 and others) may need `sudo apt remove brltty` before [the console device appears](Troubleshooting.md#no-uart-console-device-appears).
-- **PlutoSky R2 is 2.4 GHz only.** Its RF front end is a TC1-1-13MX+ balun with no PA, and the passband rolls off above 3 GHz. Upstream has tested only 2.4 GHz and does not expect 5 GHz to work.
+- **PlutoSky R2 is 2.4 GHz only.** The limit is the board's RF front end, not the transceiver chip. The TC1-1-13MX+ balun's passband rolls off above 3 GHz, even though the chip can tune higher. Upstream has tested only 2.4 GHz and does not expect 5 GHz to work.
 
 ## The baseband clock per board
 

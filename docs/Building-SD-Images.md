@@ -332,7 +332,7 @@ Buildroot targets four boards, all booted and tested on real hardware:
 | `antsdr_e200` | ANTSDR-E200 | `ttyPS0` | 512 MiB |
 | `antsdr` | ANTSDR-E310/ANT | `ttyPS0` | 1 GiB |
 | `e310v2` | ANTSDR-E310V2 | `ttyPS0` | 1 GiB |
-| `plutosky_r2` | PlutoSky R2 | `ttyPS0`, and `ttyGS0` over USB OTG | DDR3, size not stated upstream |
+| `plutosky_r2` | PlutoSky R2 | `ttyPS0`, and `ttyGS0` over USB OTG | 1 GiB |
 
 The three ANTSDR boards share one kernel, module set, and ext4 root filesystem. Only the BOOT artifacts (SPL and U-Boot, device tree, bitstream, PS init, and UART selection) are per board. The PlutoSky R2 boots from QSPI flash and has its own build profile, described in [PlutoSky R2 QSPI image](#plutosky-r2-qspi-image).
 
