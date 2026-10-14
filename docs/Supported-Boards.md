@@ -22,7 +22,7 @@ openwifi runs on **Xilinx Zynq-7000 and Zynq UltraScale+ (MPSoC)** boards. Nearl
 | `neptunesdr` | Low-cost Zynq-7020 + AD9361 board | Zynq-7020 | No | **Unofficial**, community supported |
 | `rfsoc4x2` | AMD RFSoC4x2 | Zynq UltraScale+ RFSoC | **Yes** | **Driver support only.** No public FPGA project, boot files, or bitstream. See the note below. |
 | `LibreSDR` | Low-cost Zynq-7020 + AD9361 board | Zynq-7020 | No | **Unofficial**, external repo [openwifi-libresdr](https://github.com/pavelyazev/openwifi-libresdr) |
-| `plutosky_r2` | PlutoSky R2 + AD9361, on-board ADF4001 PLL | Zynq-7020 | No | DDR3, GEM0 RGMII Ethernet. Built and tested with Vivado 2020.2, not the 2022.2 the rest of the repository targets. |
+| `plutosky_r2` | PlutoSky R2 + AD9361, on-board ADF4001 PLL | Zynq-7020 | No | DDR3, GEM0 RGMII Ethernet. Prebuilt bitstream only. No boot files in `openwifi/kernel_boot/boards/`, so you cannot build a full SD image from the public repositories. |
 
 The **Vivado license** column only matters if you rebuild the FPGA from source. The [prebuilt bitstreams](https://github.com/open-sdr/openwifi-hw-img) run on any board with no license. Boards on the Zynq-7020 qualify for the free Vivado tier.
 
@@ -33,7 +33,7 @@ The **Vivado license** column only matters if you rebuild the FPGA from source. 
     [`kernel_boot/boards/adrv9361z7035_fmc/`](https://github.com/open-sdr/openwifi/tree/master/kernel_boot/boards/adrv9361z7035_fmc) holds a prebuilt device tree for the ADRV1CRR-FMC carrier. Compared with the `adrv9361z7035` tree, it adds the carrier's AD9517 clock chip and enables a second Ethernet port. No build script refers to it, and it has no overlay in `overlays/`, so `construct_device_tree.sh` cannot regenerate it. To use it, copy its `devicetree.dtb` to the `BOOT` partition in place of the default one.
 
 !!! warning "Small-FPGA (Zynq-7020) boards have reduced buffers"
-    Boards built on the Zynq-7020 (ZedBoard, ADRV9364-Z7020, ZC702, `antsdr`, `e310v2`, `antsdr_e200`, `sdrpi`, `neptunesdr`, `LibreSDR`) have less block RAM. The `side_ch` capture engine shrinks its DMA buffer on these boards (`SIDE_CH_LESS_BRAM`), so **IQ and CSI captures have lower length limits**. `iq_len_init` can be at most 4095 and `pre_trigger_len` at most 4094. The larger FPGAs allow 8187 and 8190. The relevant [Research Features](Research-Features.md) recipes call this out.
+    Boards built on the Zynq-7020 (ZedBoard, ADRV9364-Z7020, ZC702, `antsdr`, `e310v2`, `antsdr_e200`, `sdrpi`, `neptunesdr`, `LibreSDR`, `plutosky_r2`) have less block RAM. The `side_ch` capture engine shrinks its DMA buffer on these boards (`SIDE_CH_LESS_BRAM`), so **IQ and CSI captures have lower length limits**. `iq_len_init` can be at most 4095 and `pre_trigger_len` at most 4094. The larger FPGAs allow 8187 and 8190. The relevant [Research Features](Research-Features.md) recipes call this out.
 
 ## No hardware? Use the testbed
 
@@ -82,7 +82,6 @@ A Zynq-7020 + AD936x SDR in a **Raspberry-Pi form factor**.
 - **ZCU102 differs from every other board.** It is the only 64-bit (Zynq UltraScale+) board with public images. It uses a different boot chain, with ARM Trusted Firmware BL31 and PMU firmware built by `build_zynqmp_boot_bin.sh`. Its device tree is `system.dts` instead of `devicetree.dts`. It can also hit SD card, RTC, and SODIMM module issues (see [Troubleshooting](Troubleshooting.md)).
 - **neptunesdr** sometimes shows an [`EXT4-fs error` on first boot](Troubleshooting.md#ext4-fs-error-device-mmcblk0p2-on-first-boot). Re-flash with a different imaging tool.
 - **CH341-based UART adapters** (antsdr_e200 and others) may need `sudo apt remove brltty` before [the console device appears](Troubleshooting.md#no-uart-console-device-appears).
-- **PlutoSky R2 builds under Vivado 2020.2, not the 2022.2 the rest of openwifi-hw targets.** `boards/openwifi.tcl` and the per-IP `.tcl` scripts detect the running Vivado version instead of assuming 2022.2, so the shared build scripts still work on the older release.
 
 ## The baseband clock per board
 
