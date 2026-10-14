@@ -198,3 +198,9 @@ minicom
 kbps
 prepended
 rsyslog
+sample_in(_strobe)?
+(short_|long_)?preamble_detected
+pkt_len
+demod_is_ongoing
+fcs_ok
+byte_out
