@@ -15,6 +15,7 @@ copyright: >
 
 theme:
   name: material
+  custom_dir: overrides
   logo: assets/img/openwifi-wordmark-white.png
   favicon: assets/img/openwifi-favicon.png
   font:

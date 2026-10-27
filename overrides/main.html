@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+  {{ super() }}
+  <link rel="alternate" type="text/plain" title="Instructions for automated agents" href="{{ 'llms.txt' | url }}">
+{% endblock %}

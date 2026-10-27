@@ -5,12 +5,33 @@
   const siteHost = 'thomas-montano.github.io';
   let lastPath;
   let firstPage = true;
+  let agent = false;
+
+  function isAgent() {
+    const url = new URL(location.href);
+    if (url.searchParams.get('gc') === 'agent') {
+      agent = true;
+      // Copied or shared addresses must not mark the people who open them.
+      url.searchParams.delete('gc');
+      history.replaceState(history.state, '', url);
+    }
+    return agent;
+  }
 
   function send(fields) {
     // Keep local previews and copies of the generated site out of the reports.
     if (location.hostname !== siteHost) return;
 
-    fetch(endpoint + '?' + new URLSearchParams(fields), {
+    const payload = { ...fields };
+    if (isAgent()) {
+      payload.p = (fields.e ? 'agent:' : '/__agent__') + fields.p;
+      if (fields.t) payload.t = 'Agent: ' + fields.t;
+    } else if (navigator.webdriver) {
+      // Marked agents skip the flag so GoatCounter keeps them in the agent paths.
+      payload.b = '153';
+    }
+
+    fetch(endpoint + '?' + new URLSearchParams(payload), {
       method: 'POST',
       mode: 'no-cors',
       credentials: 'omit',
@@ -109,7 +130,8 @@
 
   document$.subscribe(function () {
     const path = location.pathname;
-    if (path !== lastPath) {
+    const pageKey = (isAgent() ? '/__agent__' : '') + path;
+    if (pageKey !== lastPath) {
       const fields = { p: path, s: screen.width };
       if (firstPage) {
         const source = referringHost();
@@ -117,7 +139,7 @@
         firstPage = false;
       }
       send(fields);
-      lastPath = path;
+      lastPath = pageKey;
     }
 
     const form = document.forms.feedback;

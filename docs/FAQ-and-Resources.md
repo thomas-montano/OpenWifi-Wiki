@@ -107,9 +107,19 @@ Use the [openwifi issue tracker](https://github.com/open-sdr/openwifi/issues) fo
 
 ## Site analytics
 
-This wiki uses GoatCounter to count page visits, referring sites, outbound link clicks, search outcomes, and page feedback. It sends page paths, screen widths, referring domains, the category and destination of each outbound link you click, search outcome counts, and feedback votes.
+This wiki uses GoatCounter to count page visits, referring sites, outbound link clicks, search outcomes, and page feedback. It sends page paths, screen widths, referring domains, the category and destination of each outbound link you click, search outcome counts, and feedback votes. It also sends an automation flag and an agent label, as described in [Automated visitors](#automated-visitors).
 
 The analytics code does not send search terms, full referrer links, or query strings. An outbound link is recorded as its destination site and path with the query string removed, for example `github.com/open-sdr/openwifi`. It does not use cookies or browser storage. GoatCounter uses your IP address and browser information in memory for up to eight hours to estimate visits. Its default settings store aggregate counts. See [GoatCounter's privacy policy](https://www.goatcounter.com/help/privacy) for details.
+
+### Automated visitors
+
+The [agent instructions](llms.txt) ask automated visitors to add `gc=agent` to each page URL and use an identifiable `User-Agent` where possible. The script reads this marker without sending the query string, then removes it from the address bar so that copied links do not carry it. Agent status stays in memory during instant navigation. Reloads and new tabs need the marker again.
+
+In the GoatCounter dashboard, use the page filter to find paths beginning with `/__agent__/` for self-declared agent visits. Their interaction event names begin with `agent:`, such as `agent:search:used`, and their event titles begin with `Agent:`. Other page paths and event names stay unchanged. Unfiltered aggregate totals include both categories.
+
+When the browser reports that it is under automated control, the script sends GoatCounter's WebDriver bot flag. Marked agent visits do not send this flag, so they stay in the `/__agent__/` paths. GoatCounter applies its own detection independently and stores detected bot requests separately from aggregate visit statistics. GoatCounter excludes a marked agent request that it detects as a bot from the `/__agent__/` totals. Availability of bot records in the hosted dashboard depends on GoatCounter's current controls.
+
+Unmarked visits can come from people or from agents that did not add the marker. A person who opens a link that still contains the marker is counted as an agent. Agents that do not execute JavaScript remain invisible to this tracking. These signals do not verify identity, and historical visits cannot be reliably reclassified. The agent instructions and their discovery link do not change access or add visible content to other pages.
 
 ## License
 

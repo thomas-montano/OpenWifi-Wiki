@@ -27,6 +27,7 @@ The wiki is not the source of truth. When the wiki and an upstream repository di
 - `includes/abbreviations.md`: shared acronym list, auto-appended to every page by the `pymdownx.snippets` extension, giving each listed acronym a hover tooltip wiki-wide.
 - `docs/assets/img/`: diagrams and screenshots copied from the upstream repos, referenced as `![alt](assets/img/name.ext)`.
 - `docs/assets/stylesheets/extra.css` and `docs/assets/javascripts/external-links.js`: theme customisation and a script that opens external links in a new tab.
+- `docs/llms.txt`: plain-text instructions for automated agents, including the voluntary `gc=agent` analytics marker. `overrides/main.html` is a Material theme override (`custom_dir` in `mkdocs.yml`) that links it from every page head.
 - `.github/workflows/`: CI/CD (see below). `.github/scripts/collect_changes.py` is the Python helper for the sync workflow, and `.github/sync-state.json` records the last-processed upstream commit SHA per source repository.
 - `.vale.ini` and `styles/`: Vale prose linting. `styles/Google/` is the vendored style package (commit it, do not fetch it at lint time), `styles/openwifi/` holds project-specific rules, and `styles/config/vocabularies/openwifi/` is the project vocabulary. See the Vale section below.
 - `site/`, `internal/`, `.cache/`: gitignored (build output, scratch notes, plugin cache). Never commit anything under them. Put any scratch work of your own (notes, captured command output, temporary scripts) in `internal/`, not at the repository root.
@@ -77,7 +78,7 @@ Domain vocabulary for the spell checker lives in `styles/config/vocabularies/ope
 
 Three GitHub Actions workflows in `.github/workflows/`:
 
-- `deploy.yml`: on push to `master` (only when `docs/`, `includes/`, `mkdocs.yml`, `requirements.txt`, or the workflow itself change), runs `mkdocs build --strict` and publishes `site/` to GitHub Pages. One-time repo setup: **Settings → Pages → Source: GitHub Actions**.
+- `deploy.yml`: on push to `master` (only when `docs/`, `includes/`, `overrides/`, `mkdocs.yml`, `requirements.txt`, or the workflow itself change), runs `mkdocs build --strict` and publishes `site/` to GitHub Pages. One-time repo setup: **Settings → Pages → Source: GitHub Actions**.
 - `build-check.yml`: runs the same strict build on every pull request that touches a build input, so a broken link cannot look green until the deploy fails after merge. It also fails the build on any code fence without a language tag (an awk check), which MkDocs itself does not check. Keep its `paths` list in sync with `deploy.yml`.
 - `sync-docs.yml`: daily scheduled job, also manually dispatchable with dry-run options, that polls the two source repositories via `.github/scripts/collect_changes.py`. When commits look documentation-relevant, it runs a headless Claude Code session that opens a pull request against this repo. It never pushes content to `master` and never merges. It only commits the updated `.github/sync-state.json`.
 
