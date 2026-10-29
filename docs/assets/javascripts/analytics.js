@@ -146,7 +146,7 @@
     const path = location.pathname;
     const pageKey = (isAgent() ? '/__agent__' : '') + path;
     if (pageKey !== lastPath) {
-      const fields = { p: path, s: screen.width };
+      const fields = { p: path, t: document.title, s: screen.width };
       if (firstPage) {
         const source = referringHost();
         if (source) fields.r = 'https://' + source;

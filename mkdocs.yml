@@ -99,12 +99,7 @@ markdown_extensions:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.details
-  - pymdownx.superfences:
-      custom_fences:
-        # Render ```mermaid blocks as diagrams (theme-aware, no extra dependency).
-        - name: mermaid
-          class: mermaid
-          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.superfences
   - pymdownx.inlinehilite
   - pymdownx.highlight
   # Auto-append the shared abbreviation list to every page so acronyms defined
@@ -118,6 +113,14 @@ markdown_extensions:
 
 plugins:
   - search
+  # Downloads the theme fonts (and any other external asset) at build time
+  # and serves them from the site. Google Fonts is blocked in mainland
+  # China, and loading it there stalls every page.
+  - privacy:
+      # The theme script names a Mermaid URL, but the wiki has no Mermaid
+      # diagrams, so the 3 MB library is never loaded and is not bundled.
+      assets_exclude:
+        - unpkg.com/mermaid@11/*
   # Adds a per-page "last updated" date (from git history) shown at the
   # bottom of each page. fallback_to_build_date keeps builds working when
   # full git history isn't available (e.g. a shallow checkout).
