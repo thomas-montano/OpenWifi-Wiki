@@ -1,3 +1,7 @@
+---
+description: 'sdrctl reference for openwifi: FPGA register access, TX power and attenuation, RX gain, CCA threshold, arbitrary frequency tuning, time slicing, and sysfs statistics.'
+---
+
 # sdrctl and Runtime Control
 
 `sdrctl` is openwifi's own command-line tool for the things standard Linux Wi-Fi tools can't reach: FPGA registers, arbitrary TX and RX frequencies, TX attenuation, and MAC-address-based time slicing. It's implemented as an `nl80211` testmode command and reaches the driver (`openwifi_testmode_cmd()` in `sdrctl_intf.c`) through the normal `nl80211 → cfg80211 → mac80211` path.

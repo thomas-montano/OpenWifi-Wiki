@@ -1,4 +1,4 @@
-<h1 align="center">openwifi Wiki</h1>
+<h1 align="center">openwifi SDR Wiki</h1>
 
 <p align="center">
   Documentation for the <a href="https://github.com/open-sdr/openwifi">openwifi</a> and <a href="https://github.com/open-sdr/openwifi-hw">openwifi-hw</a> projects<br>

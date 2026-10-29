@@ -1,3 +1,7 @@
+---
+description: 'Build and modify the openwifi FPGA design in openwifi-hw: the Vivado bitstream build, updating a running board, IP core changes, the baseband clock, narrow channels, and porting.'
+---
+
 # FPGA Development
 
 This page covers building and modifying the FPGA design in the [openwifi-hw](https://github.com/open-sdr/openwifi-hw) repository.

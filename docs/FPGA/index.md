@@ -1,3 +1,7 @@
+---
+description: 'Overview of the openwifi FPGA design in openwifi-hw, built on the Analog Devices HDL reference designs, with links to the development, IP core, and simulation pages.'
+---
+
 # FPGA
 
 openwifi's hardware lives in the [openwifi-hw](https://github.com/open-sdr/openwifi-hw) repository. It is built **on top of the [Analog Devices HDL reference designs](https://github.com/analogdevicesinc/hdl)**, and openwifi adds its own IP cores and modifications to ADI's board projects. For anything that is not specific to openwifi, check the ADI wiki first.

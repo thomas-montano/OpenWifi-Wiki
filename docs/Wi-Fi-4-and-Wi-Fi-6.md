@@ -1,3 +1,7 @@
+---
+description: 'What openwifi implements of Wi-Fi 4 (802.11n): single-stream 20 MHz HT rates, A-MPDU aggregation, and short GI, plus a short 802.11 primer and the status of Wi-Fi 6.'
+---
+
 # Wi-Fi 4 and Wi-Fi 6 Features
 
 The open-source openwifi release implements 802.11a/g plus a **single-stream, 20 MHz subset of 802.11n (Wi-Fi 4)**. The release does not implement Wi-Fi 5 (802.11ac). Wi-Fi 6 (802.11ax) exists only as a commercial offering.

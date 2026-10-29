@@ -1,3 +1,7 @@
+---
+description: 'The four openwifi repositories (openwifi, openwifi-hw, openwifi-hw-img, openofdm), how they fit together at build and run time, and the toolchain versions this wiki targets.'
+---
+
 # The openwifi Project and Its Repositories
 
 New to openwifi? Start here. This page explains what the project is made of, why it is split across several repositories, and where to look when you need to find something.

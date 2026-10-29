@@ -1,3 +1,7 @@
+---
+description: 'The openwifi FPGA IP cores and signal chain: the xpu real-time MAC, openofdm_tx, openofdm_rx, tx_intf, rx_intf, side_ch, and how a register write reaches a core.'
+---
+
 # The FPGA IP Cores
 
 openwifi's **custom FPGA IP cores** live in [`openwifi-hw/ip/`](https://github.com/open-sdr/openwifi-hw/tree/master/ip). This page traces the signal path through those cores and explains what each one does and how it connects to the driver. The register map is documented on the [sdrctl & Runtime Control](sdrctl-and-Runtime-Control.md) page. For the build, simulation, and porting workflow, see [FPGA Development](FPGA-Development.md).

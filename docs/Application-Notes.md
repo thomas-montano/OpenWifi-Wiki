@@ -1,3 +1,7 @@
+---
+description: 'Index of the openwifi application notes: AP and client links, CSI and sensing, IQ capture, packet injection and fuzzing, statistics, runtime control, FPGA, and remote access.'
+---
+
 # Application Notes
 
 openwifi ships **application notes** in [`openwifi/doc/app_notes/`](https://github.com/open-sdr/openwifi/blob/master/doc/app_notes/README.md): short, task-focused guides for specific scenarios and modes. Their material appears across the thematic wiki pages, including [Operating Modes](Operating-Modes.md), [Research Features](Research-Features.md), and [sdrctl](sdrctl-and-Runtime-Control.md). This page indexes every note in one place.

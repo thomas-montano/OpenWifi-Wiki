@@ -1,6 +1,49 @@
 {% extends "base.html" %}
 
+{#- MkDocs only treats a top-level nav entry as the homepage. index.md sits under the Home section, so without this the home page is titled "Index". -#}
+{%- set is_home = page and page.file and page.file.src_uri == "index.md" %}
+
+{% block htmltitle %}
+  {%- if is_home %}
+    <title>{{ config.site_name }}</title>
+  {%- else %}
+    {{ super() }}
+  {%- endif %}
+{% endblock %}
+
 {% block extrahead %}
   {{ super() }}
   <link rel="alternate" type="text/plain" title="Instructions for automated agents" href="{{ 'llms.txt' | url }}">
+
+  {#- Search engine ownership checks. The tokens come from extra.site_verification in mkdocs.yml. A tag is only emitted once its token is set. -#}
+  {%- set verification = config.extra.site_verification or {} %}
+  {%- if verification.google %}
+  <meta name="google-site-verification" content="{{ verification.google }}">
+  {%- endif %}
+  {%- if verification.bing %}
+  <meta name="msvalidate.01" content="{{ verification.bing }}">
+  {%- endif %}
+
+  {#- Link preview cards for chat apps, mailing lists, and social sites. Every page shares one static image, and the title and description are per page. -#}
+  {%- if page.title and not is_home %}
+    {%- set og_title = page.title | striptags ~ " - " ~ config.site_name %}
+  {%- else %}
+    {%- set og_title = config.site_name %}
+  {%- endif %}
+  {%- set og_description = (page.meta and page.meta.description) or config.site_description %}
+  {%- set og_image = config.site_url ~ "assets/img/openwifi-social-card.png" %}
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ config.site_name }}">
+  <meta property="og:title" content="{{ og_title }}">
+  <meta property="og:description" content="{{ og_description }}">
+  <meta property="og:url" content="{{ page.canonical_url }}">
+  <meta property="og:image" content="{{ og_image }}">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="openwifi logo with the text Open-source Wi-Fi on SDR">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ og_title }}">
+  <meta name="twitter:description" content="{{ og_description }}">
+  <meta name="twitter:image" content="{{ og_image }}">
 {% endblock %}

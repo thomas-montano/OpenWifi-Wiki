@@ -1,3 +1,7 @@
+---
+description: 'Run openwifi as an access point, client, ad-hoc node, or monitor interface, and use packet injection and fuzzing, with the exact commands for the board and the PC.'
+---
+
 # Operating Modes
 
 openwifi presents a normal Linux Wi-Fi interface (`sdr0`), so you drive it with the same tools you'd use for any card: `hostapd`, `wpa_supplicant`, `iw`, `iwconfig`. This page walks through each mode. Throughout, **"on board"** means commands run over ssh on the SDR board, and **"on PC"** means commands run on your computer.

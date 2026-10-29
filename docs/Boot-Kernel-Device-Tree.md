@@ -1,3 +1,7 @@
+---
+description: 'The openwifi boot chain on Zynq boards: BOOT partition files, the ADI kernel, updating a running board with new modules, and porting the device tree to a new board.'
+---
+
 # Boot, Kernel, and Device Tree
 
 This page explains the boot image, kernel, and **device tree** used by an openwifi board. The device tree declares where the FPGA blocks live, so it is the main thing you edit when porting to a new board.

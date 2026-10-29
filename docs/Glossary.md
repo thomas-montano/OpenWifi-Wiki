@@ -1,3 +1,7 @@
+---
+description: 'Definitions of the 802.11, FPGA and SoC, and Linux wireless terms used across the openwifi wiki, such as A-MPDU, AD9361, CSI, and SoftMAC.'
+---
+
 # Glossary
 
 openwifi sits at the intersection of Wi-Fi (802.11), FPGA and SoC design, and the Linux wireless stack. The documentation therefore uses many acronyms from all three fields. This page defines the terms used across the wiki. Use your browser's search, or the site search, to jump to a term.

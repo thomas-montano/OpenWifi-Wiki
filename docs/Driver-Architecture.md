@@ -1,3 +1,7 @@
+---
+description: 'The openwifi Linux driver: sdr.ko and its five per-core kernel modules, device-tree hardware discovery, mac80211 callbacks, TX and RX rings, and register definitions.'
+---
+
 # The Linux Driver
 
 The **openwifi Linux driver** lives in [`openwifi/driver/`](https://github.com/open-sdr/openwifi/tree/master/driver) and sits between Linux `mac80211` and the FPGA. This page covers its kernel modules, hardware discovery at boot, transmit and receive rings, and register definitions. For rebuilding and deploying the driver, see [Software Development Workflow](Software-Development-Workflow.md).

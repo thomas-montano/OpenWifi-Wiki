@@ -1,3 +1,7 @@
+---
+description: 'How openwifi uses stock hostapd and wpa_supplicant: what each daemon does, how they reach the driver through nl80211, the shipped config files, and debugging a link that fails.'
+---
+
 # hostapd and wpa_supplicant
 
 openwifi runs **stock** `hostapd` and `wpa_supplicant`, the same binaries Ubuntu or Debian install for any Wi-Fi card. Neither daemon knows that the radio underneath is an FPGA. When a link fails, you may need to check the daemon, kernel, driver, and PHY to find the cause.

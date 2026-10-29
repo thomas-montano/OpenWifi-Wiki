@@ -1,3 +1,7 @@
+---
+description: 'Build an openwifi SD image from scratch with ADI Kuiper, OpenWrt, or Buildroot, including the prebuilt OpenWrt quick start and QSPI boot on the PlutoSky R2.'
+---
+
 # Building SD Images
 
 openwifi boots from an SD card running one of three base operating systems, and you can build any of them from scratch:

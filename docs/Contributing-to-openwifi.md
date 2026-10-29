@@ -1,3 +1,7 @@
+---
+description: 'How to contribute to openwifi: sign the CLA, set up a development environment, choose the right repository, propose a change, and contribute to this wiki.'
+---
+
 # Contributing to openwifi
 
 openwifi is an open project and welcomes contributions: driver fixes, FPGA improvements, new board support, and documentation. Each repo's own `CONTRIBUTING.md` is the authoritative source. For changes to this wiki rather than to openwifi, see [Contributing to this wiki](#contributing-to-this-wiki) at the end of this page.

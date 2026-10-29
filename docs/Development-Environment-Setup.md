@@ -1,3 +1,7 @@
+---
+description: 'Host toolchain for openwifi builds: Vivado and Vitis 2022.2, Ubuntu packages such as libtinfo5, and the XILINX_DIR, BOARD_NAME, and other build environment variables.'
+---
+
 # Environment Setup
 
 FPGA rebuilds and the driver, kernel, and software builds all run on the same host toolchain. Set it up once, then follow the workflow you need:

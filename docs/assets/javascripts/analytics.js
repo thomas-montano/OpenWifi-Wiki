@@ -84,6 +84,15 @@
     event(category + ':' + outboundDestination(target), category);
   }
 
+  function searchTerm(text) {
+    // Queries can carry personal data, so email and IPv4 addresses are masked and the length is capped.
+    return text.trim().toLowerCase()
+      .replace(/\S+@\S+/g, '<email>')
+      .replace(/\b\d{1,3}(?:\.\d{1,3}){3}\b/g, '<ip>')
+      .replace(/\s+/g, ' ')
+      .slice(0, 50);
+  }
+
   function setUpSearch() {
     const form = document.forms.search;
     if (!form) return;
@@ -92,39 +101,44 @@
     if (!input || !result) return;
 
     let used = false;
-    let noResultsSent = false;
-    let timer;
+    const reported = new Set();
 
-    function checkResults() {
-      if (!input.value.trim() || noResultsSent) return;
-      if (result.textContent.trim() !== 'No matching documents') return;
-      event('search:no-results');
-      noResultsSent = true;
+    function reportOnce(kind) {
+      const term = searchTerm(input.value);
+      if (!term || reported.has(kind + term)) return;
+      event('search:' + kind + ':' + term, 'search:' + kind);
+      reported.add(kind + term);
     }
 
-    function scheduleCheck() {
-      clearTimeout(timer);
-      timer = setTimeout(checkResults, 700);
+    function reportOutcome() {
+      // Checked when the reader leaves the search box, so the prefixes typed on the way to a term are not reported.
+      const meta = result.textContent.trim();
+      if (meta === 'No matching documents') reportOnce('miss');
+      else if (/^\d+ matching documents?$/.test(meta)) reportOnce('hit');
     }
 
     input.addEventListener('input', function () {
       if (!input.value.trim()) {
         used = false;
-        noResultsSent = false;
-        clearTimeout(timer);
+        reported.clear();
         return;
       }
       if (!used) {
         event('search:used');
         used = true;
       }
-      scheduleCheck();
     });
 
-    new MutationObserver(scheduleCheck).observe(result, {
-      childList: true,
-      characterData: true,
-      subtree: true
+    input.addEventListener('blur', reportOutcome);
+    input.addEventListener('keydown', function (key) {
+      if (key.key === 'Enter') reportOutcome();
+    });
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') reportOutcome();
+    });
+    // Material opens the top result on Enter by clicking it, so this also counts keyboard selections.
+    document.addEventListener('click', function (click) {
+      if (click.target instanceof Element && click.target.closest('.md-search-result a[href]')) reportOnce('click');
     });
   }
 

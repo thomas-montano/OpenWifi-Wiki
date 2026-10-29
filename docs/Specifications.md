@@ -1,3 +1,7 @@
+---
+description: 'openwifi datasheet: PHY rates, RF front end, MAC timing, measured throughput, FPGA resource usage on Zynq-7020 and Zynq-7045, and features missing from the open-source release.'
+---
+
 # Specifications (Datasheet)
 
 This page is a **datasheet-style reference** for openwifi. It collects the numbers you need to judge whether openwifi fits your radio, FPGA, and timing budget.

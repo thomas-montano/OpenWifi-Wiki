@@ -1,3 +1,7 @@
+---
+description: 'openwifi research features: CSI capture, full-duplex CSI radar, the CSI fuzzer for privacy, raw IQ capture, self-loopback testing, and FPGA counters and statistics.'
+---
+
 # CSI, IQ Capture, and Research Features
 
 Because the PHY is open and the platform can receive its own transmissions (full duplex), openwifi gives you instrumentation that no commercial Wi-Fi chip exposes.

@@ -1,3 +1,7 @@
+---
+description: 'SDR boards that run openwifi, such as ZedBoard, ZC706, ZCU102, ADRV9361-Z7035, ANTSDR E200 and E310 v2, LibreSDR, PlutoSky R2, and RFSoC4x2, with license needs and bring-up quirks.'
+---
+
 # Supported Boards and Hardware
 
 openwifi runs on **Xilinx Zynq-7000 and Zynq UltraScale+ (MPSoC)** boards. Nearly all pair the SoC with an **Analog Devices AD9361-family** RF front end, either an FMCOMMS2/3/4 card or an integrated equivalent. The RFSoC4x2 instead uses integrated RF data converters, and the driver treats it as a separate hardware type.

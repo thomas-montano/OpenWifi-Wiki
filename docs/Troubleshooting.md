@@ -1,3 +1,7 @@
+---
+description: 'Fixes for openwifi errors: AD9361 Unsupported PRODUCT_ID 0xFF or 0x00, ZCU102 kernel panic, EXT4-fs error on first boot, no ssh, clients with no IP, and RX dying after 2 hours.'
+---
+
 # Troubleshooting and Known Issues
 
 Grouped by symptom. When networking won't come up at all, use a **USB-UART serial console**. It shows you the boot messages that ssh can't. Connect a USB-UART adapter to the board's UART header and open the port at 115200 baud in a terminal program (for example PuTTY, screen, or minicom). The authoritative, continuously updated list is the [known-issue note](https://github.com/open-sdr/openwifi/blob/master/doc/known_issue/notter.md). This page reorganizes it and adds the debugging tools.

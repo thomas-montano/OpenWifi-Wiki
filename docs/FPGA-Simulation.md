@@ -1,3 +1,7 @@
+---
+description: 'Simulate openwifi FPGA logic in the Vivado simulator without a board: the dot11_tb receiver testbench, the transmitter testbench, block-level unit tests, and batch runs.'
+---
+
 # FPGA Simulation and Testbenches
 
 Simulation lets you develop and debug openwifi's FPGA logic without a board. You feed a recorded or generated IQ file to a testbench, run it in the Vivado simulator, then inspect the receiver's signals in the waveform view or in dumped text files. You can check each design change before you spend an hour synthesizing a bitstream.

@@ -1,3 +1,7 @@
+---
+description: 'How openwifi splits Wi-Fi between Linux mac80211, the driver, and the FPGA: the xpu low MAC, openofdm TX and RX, packet flow, TSF timing, and the AD9361 clock design.'
+---
+
 # Architecture Overview
 
 This page explains how openwifi divides work between Linux, the driver, and the FPGA. Read it before you start modifying code. For where each part lives in the source tree, see [The Repositories](Repositories.md). The driver internals are in [The Linux Driver](Driver-Architecture.md), and the FPGA cores in [FPGA IP Cores](FPGA-IP-Cores.md).

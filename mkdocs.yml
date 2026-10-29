@@ -1,4 +1,6 @@
-site_name: openwifi Wiki
+# "SDR" sets the site apart from the unrelated Telecom Infra Project OpenWiFi
+# in search results and browser tabs.
+site_name: openwifi SDR Wiki
 site_description: Documentation for openwifi, the free and open-source, Linux mac80211-compatible, full-stack IEEE 802.11 implementation on SDR hardware.
 site_url: https://thomas-montano.github.io/OpenWifi-Wiki/
 repo_url: https://github.com/thomas-montano/OpenWifi-Wiki
@@ -144,6 +146,12 @@ extra:
     - icon: material/tag
       link: https://github.com/open-sdr/openwifi/releases
       name: openwifi releases
+  # Ownership tokens from Google Search Console and Bing Webmaster Tools
+  # (the content value of their HTML meta tag). overrides/main.html emits a
+  # tag only for a token that is set.
+  site_verification:
+    google: ""
+    bing: ""
 
 nav:
   # `navigation.indexes` makes the first (untitled) entry under a section its

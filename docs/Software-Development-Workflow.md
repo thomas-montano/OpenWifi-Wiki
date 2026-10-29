@@ -1,3 +1,7 @@
+---
+description: 'Rebuild and deploy the openwifi driver, sdrctl, and user-space tools, reload the driver and FPGA without rebooting, and build a full SD image from source.'
+---
+
 # Software Development Workflow
 
 This page covers the software side of openwifi development: rebuilding and deploying the driver, `sdrctl`, and the other `user_space/` tools. Building the FPGA bitstream and turning it into a loadable image are on the [FPGA Development](FPGA-Development.md) page. The steps here take built software onto the board.

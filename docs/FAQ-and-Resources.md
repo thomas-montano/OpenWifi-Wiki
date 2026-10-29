@@ -1,3 +1,7 @@
+---
+description: 'Answers to common openwifi questions on hardware, Vivado licenses, Windows, MIMO, and frequencies, plus how to cite openwifi, publications, videos, and community support.'
+---
+
 # FAQ and Resources
 
 ## Frequently asked questions
@@ -107,9 +111,9 @@ Use the [openwifi issue tracker](https://github.com/open-sdr/openwifi/issues) fo
 
 ## Site analytics
 
-This wiki uses GoatCounter to count page visits, referring sites, outbound link clicks, search outcomes, and page feedback. It sends page paths, screen widths, referring domains, the category and destination of each outbound link you click, search outcome counts, and feedback votes. It also sends an automation flag and an agent label, as described in [Automated visitors](#automated-visitors).
+This wiki uses GoatCounter to count page visits, referring sites, outbound link clicks, search outcomes, and page feedback. It sends page paths, screen widths, referring domains, the category and destination of each outbound link you click, search terms with their outcome, and feedback votes. It also sends an automation flag and an agent label, as described in [Automated visitors](#automated-visitors).
 
-The analytics code does not send search terms, full referrer links, or query strings. An outbound link is recorded as its destination site and path with the query string removed, for example `github.com/open-sdr/openwifi`. It does not use cookies or browser storage. GoatCounter uses your IP address and browser information in memory for up to eight hours to estimate visits. Its default settings store aggregate counts. See [GoatCounter's privacy policy](https://www.goatcounter.com/help/privacy) for details.
+When you leave the search box, the analytics code sends your search term and whether it returned results. If you then open a result, it records that as well. These records show which topics readers look for, which content is missing, and where existing pages are hard to find. The term is lowercased and cut to 50 characters, and email and IPv4 addresses in it are replaced with placeholders. The code does not send full referrer links or URL query strings. An outbound link is recorded as its destination site and path with the query string removed, for example `github.com/open-sdr/openwifi`. It does not use cookies or browser storage. GoatCounter uses your IP address and browser information in memory for up to eight hours to estimate visits. Its default settings store aggregate counts. See [GoatCounter's privacy policy](https://www.goatcounter.com/help/privacy) for details.
 
 ### Automated visitors
 

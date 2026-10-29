@@ -1,3 +1,7 @@
+---
+description: 'side_ch_ctl and the openwifi side channel: loading side_ch.ko for CSI or IQ capture, the command format, register and trigger reference, event counters, and common problems.'
+---
+
 # side_ch_ctl and the Side Channel
 
 `side_ch_ctl` is openwifi's command-line tool for the **side channel**, an FPGA capture engine separate from the normal packet path. It pulls CSI, equalizer output, frequency offset, raw IQ, AGC gain, and RSSI from the receiver.

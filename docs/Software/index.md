@@ -1,3 +1,7 @@
+---
+description: 'Overview of the openwifi software in the openwifi repository: the Linux platform driver built against the ADI kernel, and the on-board user-space tools and scripts.'
+---
+
 # Software
 
 openwifi's software lives in the [openwifi](https://github.com/open-sdr/openwifi) repository. The kernel modules in `driver/` sit between Linux `mac80211` and the FPGA, and the on-board tools and scripts are in `user_space/`. The driver is a Linux **platform driver** built against the [Analog Devices kernel](https://github.com/analogdevicesinc/linux), so ADI's kernel patches are a prerequisite for everything here.

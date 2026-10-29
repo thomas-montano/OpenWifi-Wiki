@@ -1,3 +1,7 @@
+---
+description: 'Flash an openwifi SD card, boot a Zynq and AD9361 SDR board, log in over ssh, and start a Wi-Fi access point that a phone or laptop can join, in about an hour.'
+---
+
 # Getting Started
 
 This page takes you from an empty SD card to a working openwifi access point that your phone or laptop can join. Budget about an hour the first time.

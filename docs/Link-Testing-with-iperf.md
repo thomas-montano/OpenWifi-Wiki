@@ -1,3 +1,7 @@
+---
+description: 'Measure openwifi link throughput with iperf3: test setups, a quick check, settings for the best TCP and UDP results, validation workflows, and common pitfalls.'
+---
+
 # Link Testing with iperf
 
 iperf3 measures how much data crosses a network link in a set time. On openwifi it is the usual way to check that a link works end to end, and to compare one build or setting against another. The published openwifi throughput figures are iperf results: TCP 40 to 50 Mbps and UDP about 50 Mbps, as a best case with A-MPDU aggregation on.[^readme]
