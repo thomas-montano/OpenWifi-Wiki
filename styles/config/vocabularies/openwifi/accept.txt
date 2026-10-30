@@ -210,3 +210,4 @@ pkt_len
 demod_is_ongoing
 fcs_ok
 byte_out
+firewalld

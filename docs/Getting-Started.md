@@ -128,7 +128,7 @@ To measure throughput over the new link, run the [iperf3 quick check](Link-Testi
 
 ## 5. Give clients internet access (optional)
 
-The board has no internet uplink, so route client traffic through your PC.
+The board has no internet uplink, so route its traffic and its clients' traffic through your PC.
 
 On the PC, find the internet interface and the interface connected to the board:
 
@@ -145,12 +145,29 @@ INTERNET_NIC=wlp0s20f3
 
 sudo sysctl -w net.ipv4.ip_forward=1
 sudo ip route replace 192.168.13.0/24 via 192.168.10.122 dev "$BOARD_NIC"
-sudo iptables -I FORWARD 1 -i "$BOARD_NIC" -o "$INTERNET_NIC" -s 192.168.13.0/24 -j ACCEPT
-sudo iptables -I FORWARD 1 -i "$INTERNET_NIC" -o "$BOARD_NIC" -d 192.168.13.0/24 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-sudo iptables -t nat -A POSTROUTING -s 192.168.13.0/24 -o "$INTERNET_NIC" -j MASQUERADE
+sudo iptables -I FORWARD 1 -i "$BOARD_NIC" -o "$INTERNET_NIC" -j ACCEPT
+sudo iptables -I FORWARD 1 -i "$INTERNET_NIC" -o "$BOARD_NIC" -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+sudo iptables -t nat -A POSTROUTING -o "$INTERNET_NIC" -j MASQUERADE
 ```
 
-The two `FORWARD` rules allow client requests and their replies. `MASQUERADE` translates client addresses to the PC's internet-facing address.
+The rules match on interfaces, not subnets, so they cover the board at `192.168.10.122` and the clients in `192.168.13.0/24`. The two `FORWARD` rules allow outgoing requests and their replies, and the internet side cannot open new connections toward the board. They are inserted at the top of the chain, ahead of the rules that Docker and `ufw` add, which otherwise drop forwarded traffic. `MASQUERADE` translates the board and client addresses to the PC's internet-facing address.
+
+!!! note "PCs that use firewalld"
+    On Fedora, RHEL, openSUSE, and other distributions that run `firewalld`, a drop in the `firewalld` tables still applies after the `iptables` rules accept the traffic. Skip the three `iptables` lines and run these instead, after the `sysctl` and `ip route` lines:
+
+    ```bash
+    sudo firewall-cmd --zone=trusted --add-interface="$BOARD_NIC"
+    sudo firewall-cmd --add-masquerade
+    ```
+
+On the board, test its own access:
+
+```bash
+ping -c 3 1.1.1.1         # PC forwarding and NAT
+ping -c 3 example.com     # DNS
+```
+
+If `1.1.1.1` answers but `example.com` does not, set `nameserver 8.8.8.8` in `/etc/resolv.conf` on the board.
 
 From a connected Linux client, test each stage in order:
 
