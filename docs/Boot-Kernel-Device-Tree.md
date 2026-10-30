@@ -141,13 +141,14 @@ Four small patches (in `kernel_boot/`, documented in `kernel_patch_readme.md`) a
 
 ## Updating a running board
 
-Everything above describes how a board is built and what it boots. This part covers the routine operation of moving a board that already runs openwifi onto a kernel, module set, or driver you have built. The layout section comes first, since the three procedures after it all get the same files into the same two directories.
+Everything above describes how a board is built and what it boots. This part covers the routine operation of moving a board that already runs openwifi onto a newer openwifi version, or onto a kernel, module set, or driver you have built. The layout section comes first, since the four procedures after it all get the same files into the same two directories.
 
+- [Upgrading a board to a new openwifi version](#upgrading-a-board-to-a-new-openwifi-version): the full case. Kernel if it changed, plus the driver, the FPGA image, the `user_space/` scripts, and the tools compiled on the board, all from the same commit.
 - [Updating a board to a newly built kernel](#updating-a-board-to-a-newly-built-kernel): the normal path, using the transfer and populate scripts. New kernel, reboot needed.
 - [The same update by hand](#the-same-update-by-hand-without-the-scripts): the identical set of copies with plain `scp`, for when the scripts' hard-coded addresses or their all-or-nothing behavior do not suit you.
 - [Replacing a single module on a running board](#replacing-a-single-module-on-a-running-board): the light case. Same kernel, one rebuilt `.ko`, no reboot.
 
-The usual mistake is to pick the third when the kernel has changed. This shows up as `invalid module format` at `insmod`.
+The usual mistake is to pick the last one when the kernel has changed. This shows up as `invalid module format` at `insmod`.
 
 ### Where the kernel and its modules live on the board
 
@@ -179,6 +180,183 @@ The end state on a running board is this layout, and both halves of it have to b
 ```
 
 `wgd.sh` loads the openwifi stack with `insmod` from `/root/openwifi/`, and loads `mac80211` with `modprobe`, which only works through that symlink. A missing or stale symlink is a common reason a freshly updated board comes up without `sdr0`.
+
+### Upgrading a board to a new openwifi version
+
+A board that runs a new openwifi version needs four sets of files from the same commit: the kernel, the driver and FPGA image, the `user_space/` scripts and configs, and the tools compiled on the board. The [kernel update procedure](#updating-a-board-to-a-newly-built-kernel) below covers the kernel and the driver only. It leaves the scripts in `/root/openwifi/` at the version the SD image shipped with. Old scripts next to a new driver fail in confusing ways, for example a `wgd.sh` that does not know a newer option, or an `sdrctl` built from old sources.
+
+The upstream [README](https://github.com/open-sdr/openwifi#update-fpga) recommends always copying the newest files in the [`user_space`](https://github.com/open-sdr/openwifi/tree/master/user_space) directory onto the board, but it gives no command for it, and no upstream script does it on a running board. Despite its name, `transfer_driver_userspace_to_board.sh` copies only the driver `.ko` files. `update_sdcard.sh` copies all of `user_space/`, but only when it writes a new SD card. The procedure below does the same on a running board and keeps the files that exist only on the board.
+
+The steps assume an ADI Kuiper image, the board at `192.168.10.122` with its files in `/root/openwifi/`, and the [environment variables](Software-Development-Workflow.md#environment-setup) set on the PC. On the RFSoC4x2 the home directory is `/home/xilinx` instead of `/root`. A Buildroot board does not need this procedure, because its [update package](Building-SD-Images.md#update-over-ethernet) replaces the whole rootfs, scripts included.
+
+#### What lives in `/root/openwifi/`
+
+Only part of the directory comes from `user_space/`. Other steps build or place the rest, and copying `user_space/` does not update it:
+
+| Files on the board | Where they come from | Updated in |
+| --- | --- | --- |
+| Scripts, configs, and tool sources (`wgd.sh`, `fosdem.sh`, `hostapd-openwifi.conf`, `sdrctl_src/`, and the rest) | `user_space/` in the openwifi repo | [Step 4](#4-copy-the-tracked-user_space-files) |
+| `sdrctl`, `side_ch_ctl`, `inject_80211/inject_80211`, `inject_80211/analyze_80211` | Compiled on the board from those sources | [Step 5](#5-rebuild-the-on-board-tools) |
+| openwifi driver modules (`sdr.ko`, `xpu.ko`, `tx_intf.ko`, `rx_intf.ko`, `openofdm_tx.ko`, `openofdm_rx.ko`, `side_ch.ko`) | `driver/`, built on the PC | [Step 6](#6-build-and-copy-the-matching-driver-and-fpga-image) |
+| `system_top.bit.bin` | The board's bitstream in openwifi-hw-img | [Step 6](#6-build-and-copy-the-matching-driver-and-fpga-image) |
+| `ad9361_drv.ko`, `xilinx_dma.ko`, and the other board-support modules | The kernel build, moved here by `setup_once.sh` or `populate_kernel_image_module_reboot.sh` | The [kernel update](#updating-a-board-to-a-newly-built-kernel), if [step 2](#2-update-the-sources-on-the-pc-and-check-the-kernel) calls for one |
+
+Do the steps in order. Each step names where it runs, the board or the PC.
+
+#### 1. Record what the board runs now
+
+On the board, note the running kernel and the git revisions of the loaded builds. Step 2 compares against them, and they tell you what you are rolling back to if you need to.
+
+```bash
+cd /root/openwifi
+uname -r
+./wgd.sh                              # loads the current driver if it is not loaded yet
+./sdrctl dev sdr0 get reg drv_xpu 7   # driver build
+./sdrctl dev sdr0 get reg xpu 63      # FPGA build
+```
+
+Each register read prints `reg  val:` followed by eight hex digits. The driver value is the short commit hash of the openwifi checkout that the driver was built from, which `make_all.sh` writes into `git_rev.h`. `sdrctl` pads it to eight digits, so a seven-character hash shows with a leading `0`. A value of `ffffffff` means the driver was built outside a git checkout. If `wgd.sh` fails on the old image, write down `uname -r` and continue without the revisions.
+
+#### 2. Update the sources on the PC and check the kernel
+
+On the PC, bring both repositories to the version you are moving to, then prepare the kernel source for it. The driver build in step 6 needs the prepared kernel either way.
+
+```bash
+cd openwifi
+git checkout master && git pull                  # or check out the tag or branch you are moving to
+git -C $OPENWIFI_HW_IMG_DIR checkout master && git -C $OPENWIFI_HW_IMG_DIR pull
+cd user_space
+./prepare_kernel.sh $XILINX_DIR $ARCH_BIT
+cat ../adi-linux-64/include/config/kernel.release   # 64-bit, use ../adi-linux/... for 32-bit
+```
+
+Compare the printed release string with the `uname -r` from step 1. Then check whether the upgrade changed the kernel, its config or patches, or the board's boot files, using the driver revision from step 1:
+
+```bash
+OLD_REV=08043cfe                                 # the drv_xpu 7 value from step 1
+git log --oneline $OLD_REV..HEAD -- ../adi-linux ../adi-linux-64 ../kernel_boot prepare_kernel.sh
+```
+
+If git reports an unknown revision and the value starts with `0`, drop the leading `0` and try again. If the value was `ffffffff`, you have no old revision to compare against, so treat the kernel as changed.
+
+- **Same release string and no commits listed:** the board's kernel is still correct. Continue with step 3.
+- **Different release string, or any commit listed:** update the kernel first. Follow steps 1 to 6 of [Updating a board to a newly built kernel](#updating-a-board-to-a-newly-built-kernel), then come back to step 3 here. Skip steps 7 and 8 of that page, because step 6 here installs the driver together with the new FPGA image.
+
+#### 3. Back up the board's openwifi directory
+
+On the board, pack the whole directory into one archive. It holds the old driver, bitstream, and compiled tools that no other copy has, and it is what you restore if the upgrade fails.
+
+```bash
+cd /root
+df -h /root                                           # the backup needs some free space on the SD card
+tar -czf openwifi-backup-$(date +%Y%m%d).tar.gz openwifi
+```
+
+To keep a copy off the board, run this on the PC:
+
+```bash
+scp root@192.168.10.122:openwifi-backup-*.tar.gz .
+```
+
+#### 4. Copy the tracked `user_space` files
+
+On the PC, pack the `user_space/` directory at the checked-out commit and send it to the board:
+
+```bash
+cd openwifi
+git status --short user_space                    # local changes listed here are not in the archive
+git archive --format=tar.gz -o user_space.tar.gz HEAD:user_space
+scp user_space.tar.gz root@192.168.10.122:
+```
+
+`git archive` packs only the files git tracks, in their committed state. Commit any local changes you want on the board first, or copy those files separately. Do not use `scp -r user_space/*` instead. Build output collects in that directory on the PC, such as `system_top.bit.bin`, `hdf_and_bit/`, `kernel_modules/`, and `*.tar.gz` packages, and a plain copy sends it to the board. A stray `system_top.bit.bin` is the dangerous one, because `wgd.sh` loads whatever bitstream it finds in the directory.
+
+On the board, unpack the archive over the existing directory:
+
+```bash
+cd /root/openwifi
+tar -xzf /root/user_space.tar.gz
+```
+
+Files with the same name are replaced. The driver modules, the bitstream, the compiled tools, and anything else that is not in the archive stay as they are. Do not delete `/root/openwifi/` first, because that removes the board-support modules that only the kernel update puts there, and `wgd.sh` then fails.
+
+!!! warning "Edited config files are overwritten"
+    If you changed a file that comes from `user_space/`, such as `hostapd-openwifi.conf` or `dhcpd.conf`, the upstream version has now replaced it. Compare it with the copy in the backup from step 3 and re-apply your changes:
+
+    ```bash
+    tar -xzf /root/openwifi-backup-*.tar.gz -O openwifi/hostapd-openwifi.conf | diff - hostapd-openwifi.conf
+    ```
+
+!!! note "Files removed upstream stay on the board"
+    The archive only adds and replaces files. A script that upstream deleted or renamed since your old version stays on the board. To list those files, run this on the PC in the openwifi directory, with `OLD_REV` from step 2, and delete them on the board if you do not want them:
+
+    ```bash
+    git diff --name-status --diff-filter=DR $OLD_REV HEAD -- user_space
+    ```
+
+#### 5. Rebuild the on-board tools
+
+On the board, compile the three tools from the sources that step 4 just updated:
+
+```bash
+cd /root/openwifi/sdrctl_src && make clean && make && cp sdrctl ../
+cd /root/openwifi/side_ch_ctl_src && gcc -o side_ch_ctl side_ch_ctl.c && cp side_ch_ctl ../
+cd /root/openwifi/inject_80211 && make clean && make
+```
+
+These are the build commands that `setup_once.sh` runs on first boot. Each line should finish without errors. `sdrctl` and `side_ch_ctl` end up in `/root/openwifi/`, and `inject_80211` and `analyze_80211` stay in `/root/openwifi/inject_80211/`.
+
+!!! warning "Do not run `setup_once.sh` for this"
+    `setup_once.sh` builds the same tools, but it also copies the driver, kernel modules, and bitstream that were staged on the SD card when it was written. It overwrites `/root/kernel_modules` and the driver in `/root/openwifi/` with those old copies and repoints `/lib/modules`. That undoes a kernel update and puts the old driver back.
+
+#### 6. Build and copy the matching driver and FPGA image
+
+On the PC, build the driver and the FPGA image from the versions you checked out in step 2, and copy both into `/root/openwifi/`:
+
+```bash
+cd openwifi/user_space
+./drv_and_fpga_package_gen.sh $OPENWIFI_HW_IMG_DIR $XILINX_DIR $BOARD_NAME
+scp system_top.bit.bin root@192.168.10.122:openwifi/
+cd ../driver
+scp `find ./ -name \*.ko` root@192.168.10.122:openwifi/
+```
+
+`drv_and_fpga_package_gen.sh` converts the board's bitstream from openwifi-hw-img into `system_top.bit.bin`. It then rebuilds the driver with `make_all.sh` against the kernel prepared in step 2. Copying both into `/root/openwifi/` makes them the set that a plain `./wgd.sh` loads. If you build the driver with [conditional-compile flags](Software-Development-Workflow.md#conditional-compilation), run `make_all.sh` with those flags after the package script and before the second `scp`.
+
+#### 7. Load and verify
+
+On the board:
+
+```bash
+cd /root/openwifi
+./wgd.sh
+ifconfig sdr0 up
+./sdrctl dev sdr0 get reg drv_xpu 7
+./sdrctl dev sdr0 get reg xpu 63
+```
+
+Check each of these:
+
+- `wgd.sh` finishes and `ifconfig sdr0 up` succeeds. If `sdr0` is missing, read `dmesg | tail -40` and use the table in [If `sdr0` does not appear](#if-sdr0-does-not-appear).
+- The driver value matches `git log -1 --pretty=%h` in your openwifi checkout on the PC, padded to eight digits.
+- The FPGA value differs from step 1 if the bitstream for your board changed in openwifi-hw-img between the two versions.
+- Both `sdrctl` reads print a value. A segmentation fault means a tool was not rebuilt against the new sources. Repeat step 5 and see [Tool crashes](Troubleshooting.md#tool-crashes).
+
+Then start your usual mode again (`fosdem.sh`, `wpa_supplicant`, or a monitor setup, see [Operating Modes](Operating-Modes.md)). After a large version jump, the [iperf regression check](Link-Testing-with-iperf.md#regression-check-after-a-driver-or-fpga-change) tells you whether throughput changed.
+
+#### Rolling back
+
+To return to the old scripts, tools, driver, and bitstream together, restore the backup from step 3 on the board:
+
+```bash
+cd /root
+rm -rf openwifi
+tar -xzf openwifi-backup-20261030.tar.gz        # the file name from step 3
+cd openwifi
+./wgd.sh
+```
+
+This works only if step 2 did not update the kernel. The old driver modules do not load into a new kernel, and the backup does not contain the old kernel image or `/root/kernel_modules`.
 
 ### Updating a board to a newly built kernel
 
@@ -279,6 +457,7 @@ Use `ifconfig -a` rather than plain `ifconfig`. `wgd.sh` leaves the interface do
 
 !!! tip "Rebuild `sdrctl` and `side_ch_ctl` too"
     After a kernel update, these tools can end up out of sync with the driver they talk to. This can show up as a segmentation fault instead of a clean error ([details](Troubleshooting.md#tool-crashes)). Rebuild both on the board while you are here: [Rebuilding sdrctl](Software-Development-Workflow.md#rebuilding-sdrctl) and [Building side_ch_ctl](side_ch_ctl-and-the-Side-Channel.md#building).
+
 
 #### If `sdr0` does not appear
 

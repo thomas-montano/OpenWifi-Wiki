@@ -6,7 +6,7 @@ description: 'Rebuild and deploy the openwifi driver, sdrctl, and user-space too
 
 This page covers the software side of openwifi development: rebuilding and deploying the driver, `sdrctl`, and the other `user_space/` tools. Building the FPGA bitstream and turning it into a loadable image are on the [FPGA Development](FPGA-Development.md) page. The steps here take built software onto the board.
 
-The prebuilt SD image may be older than the current repo. Before doing serious work, **copy the repo's `user_space/` files onto the board**, and rebuild the driver against the matching kernel.
+The prebuilt SD image may be older than the current repo. Before doing serious work, **copy the repo's `user_space/` files onto the board**, and rebuild the driver against the matching kernel. [Upgrading a board to a new openwifi version](Boot-Kernel-Device-Tree.md#upgrading-a-board-to-a-new-openwifi-version) walks through both.
 
 If you are in the middle of editing code and want the steps, start with the [quick reference](#quick-reference-from-code-change-to-running-board) below and follow its links for detail.
 
@@ -35,6 +35,7 @@ Find the row that matches what you changed and follow its link to the full instr
 | **`inject_80211` / `analyze_80211`** (`user_space/inject_80211/`) | `scp` the source to the board, then **on the board**: `make` | Run it ([usage](Operating-Modes.md#packet-injection-and-fuzzing)) |
 | **Helper scripts** (`user_space/*.sh`, `*.py`) | Nothing to compile. Copy them to the board with `scp`. The Python display scripts (`side_info_display.py`, `iq_capture.py`, and others) run on the PC instead | Run them |
 | **FPGA Verilog / IP cores** | On the PC: rebuild the bitstream ([FPGA Development](FPGA-Development.md)), then `boot_bin_gen.sh` and `scp system_top.bit.bin` to the board | `./wgd.sh`, no reboot needed ([details](FPGA-Development.md#updating-the-fpga-image-on-a-running-board)) |
+| **Whole openwifi version** (a newer upstream checkout) | Kernel if it changed, then `user_space/`, the on-board tools, the driver, and the FPGA image, all from the same commit | Step by step in [Upgrading a board to a new openwifi version](Boot-Kernel-Device-Tree.md#upgrading-a-board-to-a-new-openwifi-version) |
 | **Kernel config or device tree** | Rebuild on the PC, then transfer and populate on the board. Full step-by-step in [Updating a board to a newly built kernel](Boot-Kernel-Device-Tree.md#updating-a-board-to-a-newly-built-kernel), short form under [bulk helpers](#bulk-update-helpers) | Reboot. A kernel **version** change also needs the driver rebuilt and the populate script run twice, and `sdrctl`/`side_ch_ctl` rebuilt to avoid [crashes from the mismatch](Troubleshooting.md#tool-crashes) |
 
 ### The driver iteration loop
@@ -165,7 +166,7 @@ A successful build finishes without errors, and the new binary lands at `~/openw
 For larger updates (kernel, modules, device tree, rootfs) there are paired host/board scripts:
 
 - **Kernel + modules + device tree:** on the host, `prepare_kernel.sh`, `boot_bin_gen.sh`, and `transfer_kernel_image_module_to_board.sh`. On the board, `populate_kernel_image_module_reboot.sh` (run it again after the first reboot if the kernel *version* changed, so symlinks point at the new version). The whole flow, with the verification steps that get you back to a working `sdr0`, is written out in [Updating a board to a newly built kernel](Boot-Kernel-Device-Tree.md#updating-a-board-to-a-newly-built-kernel).
-- **Driver + user space:** on the host, `make_all.sh` and `transfer_driver_userspace_to_board.sh`. On the board, `populate_driver_userspace.sh`.
+- **Driver modules:** on the host, `make_all.sh` and `transfer_driver_userspace_to_board.sh`. On the board, `populate_driver_userspace.sh`. Despite the script names, only the driver `.ko` files are transferred, not the `user_space/` scripts. To update those, see [Upgrading a board to a new openwifi version](Boot-Kernel-Device-Tree.md#upgrading-a-board-to-a-new-openwifi-version).
 - **Over FTP (optional):** set up an anonymous FTP server on the PC, rooted at your `openwifi` directory. On the board, `./sdcard_boot_update.sh $BOARD_NAME` pulls `uImage`, `BOOT.BIN`, and `devicetree.dtb` into the boot partition, after which you power-cycle. `./wgd.sh remote` then pulls the driver files and brings up `sdr0`. Anonymous FTP has no authentication, so use it on trusted lab networks only.
 - **rootfs as a disk:** on the PC, *File manager → Connect to Server → `sftp://root@192.168.10.122/root`* (password `openwifi`).
 - It is also worth refreshing the ADI rootfs tools. On the board, clone [`linux_image_ADI-scripts`](https://github.com/analogdevicesinc/linux_image_ADI-scripts), run `apt update`, and then run `adi_update_tools.sh` (see the [ADI Kuiper update guide](https://wiki.analog.com/resources/tools-software/linux-software/kuiper-linux/update)).

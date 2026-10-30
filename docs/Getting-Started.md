@@ -45,7 +45,7 @@ This page takes you from an empty SD card to a working openwifi access point tha
 
     !!! note "Prebuilt image version"
 
-        The prebuilt image may lag the current repository. For development with current code, follow [Software Development Workflow](Software-Development-Workflow.md) to update the board's files and build the driver against the matching kernel.
+        The prebuilt image may lag the current repository. To bring a running board up to the current code, follow [Upgrading a board to a new openwifi version](Boot-Kernel-Device-Tree.md#upgrading-a-board-to-a-new-openwifi-version). It updates the kernel if needed, the driver and FPGA image, and the `user_space/` scripts together.
 
 2. Write it to the SD card with an imaging tool (GNOME Disks, Startup Disk Creator, win32diskimager) or with `dd`. Check the image's sector count and your SD card device before editing the example write command:
 
