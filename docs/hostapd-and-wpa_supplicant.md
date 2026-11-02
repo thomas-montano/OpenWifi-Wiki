@@ -104,7 +104,7 @@ These live in the `openwifi` directory on the board, next to `wgd.sh` and `fosde
 
 `fosdem.sh` starts hostapd with `hostapd-openwifi.conf` and adds a DHCP server and a demo webserver on top. `fosdem-11ag.sh` is the same thing forced to legacy 802.11a/g. Neither script does anything to hostapd that you could not do by hand.
 
-Check the shipped files on your own board before assuming defaults. They change between releases, and the wiki is not the source of truth for their contents.
+Check the shipped files on your own board before assuming defaults, because they change between releases.
 
 ## When you have to edit them
 

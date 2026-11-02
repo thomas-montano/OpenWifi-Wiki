@@ -153,7 +153,7 @@ The first line above is a metadata line. The testbench treats any line that does
 The testbench ignores any values after the eighth. The default vector uses 5220 MHz.
 
 !!! warning "Most shipped vectors have no metadata line"
-    Only a metadata line sets `Fc_in_MHz`. Upstream added the line to the default vector in [commit 6d459c1](https://github.com/open-sdr/openofdm/commit/6d459c1701b4795064c3bcf63ca698944c00e5c1) because `dot11_tb` does not work without it. Without the line, the receiver still detects the preamble, but the SIGNAL check fails and `status_code.txt` gets a line instead of `fcs_out.txt`. The other vectors in `testing_inputs/` are older and lack the line. Copy the first line of the default vector to the top of any other vector or capture before you simulate it:
+    Only a metadata line sets `Fc_in_MHz`. The line was added to the default vector in [commit 6d459c1](https://github.com/open-sdr/openofdm/commit/6d459c1701b4795064c3bcf63ca698944c00e5c1) because `dot11_tb` does not work without it. Without the line, the receiver still detects the preamble, but the SIGNAL check fails and `status_code.txt` gets a line instead of `fcs_out.txt`. The other vectors in `testing_inputs/` are older and lack the line. Copy the first line of the default vector to the top of any other vector or capture before you simulate it:
 
     ```bash
     # from the openwifi-hw root
@@ -361,7 +361,7 @@ source openofdm_rx_sim_iq_file.tcl
 !!! warning "The results directory is replaced on every run"
     The script runs `rm -rf` on the results directory before it copies the new dumps. For `/home/user/captures/capture.txt`, that is `/home/user/captures/capture/`. Keep nothing else in it.
 
-For a batch, edit the `iq_file_set` list near the top of `openofdm_rx_sim_iq_file_batch.tcl`, because the committed list holds paths from the upstream author's machine. A `glob` pattern also works:
+For a batch, edit the `iq_file_set` list near the top of `openofdm_rx_sim_iq_file_batch.tcl`, because the committed list holds paths from the original author's machine. A `glob` pattern also works:
 
 ```tcl
 set iq_file_set [list \
@@ -456,7 +456,7 @@ Simulation and on-board debugging cover different failures. Use the testbench to
 
 ### Replaying a hardware capture
 
-The upstream scripts in [`user_space/side_ch_ctl_src/`](https://github.com/open-sdr/openwifi/tree/master/user_space/side_ch_ctl_src) turn a `side_ch` IQ capture into a `dot11_tb` input file.
+The scripts in [`user_space/side_ch_ctl_src/`](https://github.com/open-sdr/openwifi/tree/master/user_space/side_ch_ctl_src) turn a `side_ch` IQ capture into a `dot11_tb` input file.
 
 1. Capture IQ received off the air, as described in [IQ capture](Research-Features.md#iq-capture). Pick a trigger condition that fires on the packet you care about. On the PC, `iq_capture.py` writes every capture to `iq.txt`.
 2. In MATLAB, in `openwifi/user_space/side_ch_ctl_src`, split the file into captures and write the one you want as `I Q` lines. This example uses an `iq_len` of 8187 and capture number 5:

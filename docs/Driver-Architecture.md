@@ -12,7 +12,7 @@ The openwifi driver consists of several kernel modules. `sdr.ko` depends on five
 
 Each per-core module binds to its own device-tree node through its own `compatible` string and exports an API struct that `sdr.ko` calls into. Apart from `sdr.ko` itself, every module is a thin wrapper around register access to one core, so the last column below lists what those registers control.
 
-The naming is regular enough to be worth stating once instead of tabulating. A module named `X.ko` is built from `driver/X/X.c`, binds to the device-tree node `compatible = "sdr,X"`, and drives the FPGA core in `openwifi-hw/ip/X/src/X.v`. The Source column of the table breaks this pattern in two places. `sdr.c` sits at the top of `driver/` instead of in its own subdirectory. The OFDM receiver's top module is `dot11.v` inside the [openofdm submodule](FPGA-IP-Cores.md#openofdm_rx-the-ofdm-receiver), not `openofdm_rx.v`.
+The naming is regular enough to be worth stating once instead of tabulating. A module named `X.ko` is built from `driver/X/X.c`, binds to the device-tree node `compatible = "sdr,X"`, and drives the FPGA core in `openwifi-hw/ip/X/src/X.v`. The Source column of the table breaks this pattern in two places. `sdr.c` sits at the top of `driver/` instead of in its own subdirectory. The OFDM receiver's `openofdm_rx.v` lives in `verilog/` inside the [openofdm submodule](FPGA-IP-Cores.md#openofdm_rx-the-ofdm-receiver), not in a `src/` directory. It wraps the `dot11` receiver and the `openofdm_rx_s_axi` register bank.
 
 | Module | Source (driver ↔ FPGA) | Registers control |
 |---|---|---|
@@ -21,7 +21,7 @@ The naming is regular enough to be worth stating once instead of tabulating. A m
 | `tx_intf.ko` | `tx_intf.c` ↔ `tx_intf.v` | The TX interface: baseband gain, antenna select, FIFO thresholds, interrupt source select, CTS-to-self config, CSI fuzzer |
 | `rx_intf.ko` | `rx_intf.c` ↔ `rx_intf.v` | The RX interface: IQ source select (including FPGA loopback), baseband gain, antenna select, interrupt delay, tlast timeout |
 | `openofdm_tx.ko` | `openofdm_tx.c` ↔ `openofdm_tx.v` | The OFDM transmitter, and very little of it: reset plus the pilot and data scrambler seeds |
-| `openofdm_rx.ko` | `openofdm_rx.c` ↔ `dot11.v` | The OFDM receiver: power threshold, minimum plateau, soft decoding, FFT window shift, phase-offset threshold, state history |
+| `openofdm_rx.ko` | `openofdm_rx.c` ↔ `openofdm_rx.v` | The OFDM receiver: power threshold, minimum plateau, soft decoding, FFT window shift, phase-offset threshold, state history |
 
 The top-level `driver/Makefile` builds all six in one line:
 
@@ -29,7 +29,7 @@ The top-level `driver/Makefile` builds all six in one line:
 obj-m += sdr.o openofdm_rx/openofdm_rx.o openofdm_tx/openofdm_tx.o tx_intf/tx_intf.o rx_intf/rx_intf.o xpu/xpu.o
 ```
 
-`side_ch.ko` is **deliberately not in that list**. It has its own `make_driver.sh` and is built and loaded separately, because you load it on demand for research capture rather than always running it. See [FPGA IP Cores](FPGA-IP-Cores.md#side_ch-the-csi-and-iq-capture-side-channel) and [Research Features](Research-Features.md).
+`side_ch.ko` is **deliberately not in that list**. It has its own `driver/side_ch/make_driver.sh`, which `make_all.sh` also calls, so a normal driver build produces it. `wgd.sh` does not load it, because you load it on demand for research capture rather than always running it. See [FPGA IP Cores](FPGA-IP-Cores.md#side_ch-the-csi-and-iq-capture-side-channel) and [Research Features](Research-Features.md).
 
 !!! note "`driver/xilinx_dma/` is a historical leftover"
     The driver tree contains an `xilinx_dma` directory. Its own README says openwifi no longer maintains a modified Xilinx DMA driver and that the stock in-kernel one is used instead. Do not treat it as a live component.
@@ -49,12 +49,15 @@ openwifi is a Linux **platform driver** rather than a PCI or USB device. With no
     | Model string contains `ZCU102` | `ZYNQMP_AD9361` | `LARGE_FPGA` |
     | Model string contains `Z7035` or `ZC706` | `ZYNQ_AD9361` | `LARGE_FPGA` |
     | Any other model string | `ZYNQ_AD9361` | `SMALL_FPGA` |
-    | No model string, but an `lmk` node (the TI LMK04828 clock chip) is present | `RFSOC4X2` | `SMALL_FPGA` |
+    | No model string, but an `lmk` node (the TI LMK04828 clock chip) is present | `RFSOC4X2` | `LARGE_FPGA` |
+    | No model string and no `lmk` node | `UNKNOWN_HARDWARE` | `SMALL_FPGA` |
 
-    `LARGE_FPGA` covers `ZCU102`, `Z7035`, and `ZC706`, and everything else is `SMALL_FPGA`. With this detection, capture-buffer length and similar limits adapt to each board without configuration. See [Supported Boards](Supported-Boards.md).
+    `LARGE_FPGA` covers `ZCU102`, `Z7035`, `ZC706`, and the RFSoC4x2, and everything else is `SMALL_FPGA`. With this detection, capture-buffer length and similar limits adapt to each board without configuration. See [Supported Boards](Supported-Boards.md).
 4. **Find the AD9361.** On every board except the RFSoC4x2, the driver locates the `ad9361-phy` device on the SPI bus and the `cf-ad9361-dds-core-lpc` platform device. It keeps handles to the ADI PHY and DDS state so it can call into the standard Analog Devices IIO driver later (`ad9361_set_tx_atten`, `ad9361_do_calib_run`, and so on). A missing or unprobed AD9361 driver fails the openwifi probe outright. The ADI kernel patches are therefore a prerequisite.
-5. **Request the DMA channels** by name: `rx_dma_s2mm` and `tx_dma_mm2s`.
-6. **Request the interrupts.** The RX packet interrupt is device-tree interrupt index **1** (`sdr,rx_pkt_intr`) and the TX interrupt is index **3** (`sdr,tx_itrpt`), both registered `IRQF_SHARED`.
+The DMA channels and interrupts are not claimed at probe time. `openwifi_start()` claims them each time the interface comes up (`ifconfig sdr0 up`):
+
+- **DMA channels**, requested by name: `rx_dma_s2mm` and `tx_dma_mm2s`.
+- **Interrupts.** The RX packet interrupt is device-tree interrupt index **1** (`sdr,rx_pkt_intr`) and the TX interrupt is index **3** (`sdr,tx_itrpt`), both registered `IRQF_SHARED`.
 
 The driver also takes two module parameters worth knowing. `test_mode` uses bit 0 to enable A-MPDU aggregation, which is what `./wgd.sh 1` sets, and bit 1 to advertise short guard interval (see [Wi-Fi 4 & Wi-Fi 6 Features](Wi-Fi-4-and-Wi-Fi-6.md#short-guard-interval)). `init_tx_att` is the initial TX attenuation in thousandths of a dB, so 3000 means 3 dB.
 

@@ -208,7 +208,7 @@ The imec [w-iLab.t tutorial](https://doc.ilabt.imec.be/ilabt/wilab/tutorials/ope
 
 ## Other `sdrctl` parameters
 
-Two more parameters exist in `sdrctl` but are easy to misread. Neither is documented upstream.
+Two more parameters exist in `sdrctl` but are easy to misread. Neither is described in the repository docs.
 
 | `para_name` | What it does |
 |---|---|

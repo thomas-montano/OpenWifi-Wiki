@@ -6,7 +6,7 @@ description: 'Measure openwifi link throughput with iperf3: test setups, a quick
 
 iperf3 measures how much data crosses a network link in a set time. On openwifi it is the usual way to check that a link works end to end, and to compare one build or setting against another. The published openwifi throughput figures are iperf results: TCP 40 to 50 Mbps and UDP about 50 Mbps, as a best case with A-MPDU aggregation on.[^readme]
 
-This page uses iperf3. The Kuiper image build installs both `iperf` (version 2) and `iperf3` on the board (see [Building SD Images](Building-SD-Images.md#6-install-tools-and-build-the-on-board-utilities)). Upstream does not publish the commands or the setup behind its numbers, so the procedures below are recommended practice, not the upstream method.
+This page uses iperf3. The Kuiper image build installs both `iperf` (version 2) and `iperf3` on the board (see [Building SD Images](Building-SD-Images.md#6-install-tools-and-build-the-on-board-utilities)). The published throughput figures do not come with the commands or the setup behind them, so the procedures below are recommended practice rather than the exact method behind those figures.
 
 ## What iperf3 measures
 

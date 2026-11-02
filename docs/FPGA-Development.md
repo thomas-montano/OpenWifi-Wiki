@@ -12,7 +12,7 @@ The design is built **on top of the [Analog Devices HDL reference designs](https
 
 First set up the shared host toolchain on the [Environment Setup](Development-Environment-Setup.md) page (Vivado 2022.2 with Vitis, Ubuntu packages such as `libtinfo5`, and the `XILINX_DIR` and `BOARD_NAME` environment variables). FPGA builds also need the **evaluation license of the Xilinx Viterbi Decoder** installed into Vivado. This evaluation license is why a running board's decoder halts after about 2 hours (see [Troubleshooting](Troubleshooting.md#reception-dies-after-2-hours)).
 
-Set `export XILINX_DIR=/opt/Xilinx` and `export BOARD_NAME=<your board>` before building. If the software and FPGA repos disagree on the Vivado version, match the one the repo README states at the time you build (see [Environment Setup](Development-Environment-Setup.md#xilinx-toolchain-vivado-vitis)).
+Set `export XILINX_DIR=/opt/Xilinx` and `export BOARD_NAME=<your board>` before building. The build scripts in both repos check for `Vivado/2022.2` or `Vitis/2022.2` under `$XILINX_DIR` and stop if it is missing. Older instructions that name 2021.1 no longer apply (see [Environment Setup](Development-Environment-Setup.md#xilinx-toolchain-vivado-vitis)).
 
 ## Building the bitstream
 
@@ -55,7 +55,7 @@ Run these from the `openwifi-hw` repo root unless noted.
     ./sdk_update.sh $BOARD_NAME $OPENWIFI_HW_IMG_DIR
     ```
 
-    This copies the FPGA image (`.xsa`, `.ltx`) and git info into `$OPENWIFI_HW_IMG_DIR` so the openwifi (software) build can pick it up (see [below](#updating-the-fpga-image-on-a-running-board)).
+    This copies the FPGA image (`system_top.xsa`, plus the `.ltx` debug-probe file when the design has ILA cores) and git info into `$OPENWIFI_HW_IMG_DIR` so the openwifi (software) build can pick it up (see [below](#updating-the-fpga-image-on-a-running-board)).
 
 !!! note "GUI iteration"
     The `create_ip_repo.sh` step above already runs Vivado for you. To iterate by hand, open the project in the Vivado GUI and generate the bitstream:
@@ -66,7 +66,7 @@ Run these from the `openwifi-hw` repo root unless noted.
     # then: File → Export → Export Hardware → Include bitstream → Finish
     ```
 
-Prebuilt outputs for each board live in the **openwifi-hw-img** repo under `boards/$BOARD_NAME/sdk/` (bitstream, ILA `.ltx`, init files) if you'd rather not synthesize.
+Prebuilt outputs for each board live in the **openwifi-hw-img** repo under `boards/$BOARD_NAME/sdk/` (`system_top.xsa`, which contains the bitstream, and `git_info.txt`) if you'd rather not synthesize.
 
 ## Updating the FPGA image on a running board
 
@@ -210,4 +210,4 @@ openwifi's baseline is tag `2022_R2` of the ADI HDL reference designs (the `adi-
 
 ## Debugging on hardware
 
-Use the Xilinx **ILA** (Integrated Logic Analyzer) to watch internal FPGA signals in real time. It is the clearest way to understand the low-MAC and interface state machines in `xpu`, `tx_intf`, and `rx_intf`. Enable the debug macros (see conditional compilation above) to insert ILA cores. The prebuilt `.ltx` in openwifi-hw-img matches the shipped bitstreams. Background and an example are in [openwifi-hw issue #39](https://github.com/open-sdr/openwifi-hw/issues/39). See also the [GPIO and LED map](https://github.com/open-sdr/openwifi-hw/blob/master/gpio_led.md). It routes signals such as `tx_bb_is_ongoing`, `tx_rf_is_ongoing`, `fcs_ok`, and `demod_is_ongoing` to board LEDs and PMOD pins, so you can probe them with a scope or logic analyzer.
+Use the Xilinx **ILA** (Integrated Logic Analyzer) to watch internal FPGA signals in real time. It is the clearest way to understand the low-MAC and interface state machines in `xpu`, `tx_intf`, and `rx_intf`. Enable the debug macros (see conditional compilation above) to insert ILA cores. The prebuilt bitstreams in openwifi-hw-img ship without a `.ltx` probe file, so build your own image to debug with ILA. Background and an example are in [openwifi-hw issue #39](https://github.com/open-sdr/openwifi-hw/issues/39). See also the [GPIO and LED map](https://github.com/open-sdr/openwifi-hw/blob/master/gpio_led.md). It routes signals such as `tx_bb_is_ongoing`, `tx_rf_is_ongoing`, `fcs_ok`, and `demod_is_ongoing` to board LEDs and PMOD pins, so you can probe them with a scope or logic analyzer.

@@ -67,7 +67,7 @@ This page takes you from an empty SD card to a working openwifi access point tha
     - Delete `rootfs/etc/network/interfaces.new` if it exists (a common cause of "can't ssh to the board").
 
     !!! info "Only delete these if they exist"
-        The `rootfs` partition is ext4, which Windows and macOS cannot mount without extra tooling (WSL or an ext4 driver). Neither deletion is required for the board to boot. `rootfs/root/kernel_modules` is a staging directory that `setup_once.sh` rebuilds on first boot, so a stale copy can shadow the fresh one.
+        The `rootfs` partition is ext4, which Windows and macOS cannot mount without extra tooling (WSL or an ext4 driver). Neither deletion is required for the board to boot. `rootfs/root/kernel_modules` is a staging directory that `setup_once.sh` deletes and rebuilds anyway.
 
 ## 3. First boot and login
 

@@ -100,7 +100,7 @@ FMC
 :   FPGA Mezzanine Card: a standard connector and daughter-card form factor. The AD9361-carrying FMCOMMS2/3/4 cards are FMC modules that plug into the Xilinx dev boards.
 
 FMCOMMS2/3/4
-:   Analog Devices FMC daughter-cards carrying the AD9361, used with Xilinx dev boards (ZC706, ZedBoard, ZC702, ZCU102) in several supported openwifi platforms.
+:   Analog Devices FMC daughter-cards carrying the AD9361 (the AD9364 on FMCOMMS4), used with Xilinx dev boards (ZC706, ZedBoard, ZC702, ZCU102) in several supported openwifi platforms.
 
 FPGA
 :   Field-Programmable Gate Array: the reconfigurable logic fabric (inside the Zynq SoC) where openwifi's PHY and real-time MAC live.
@@ -283,10 +283,10 @@ wpa_supplicant
 :   The standard Linux user-space client for joining Wi-Fi networks. openwifi runs stock `wpa_supplicant` over `sdr0` in client mode. See [hostapd and wpa_supplicant](hostapd-and-wpa_supplicant.md).
 
 `wgd.sh`
-:   The on-board bring-up script that loads the FPGA image and the openwifi driver and brings up the `sdr0` interface. See [Software Development Workflow](Software-Development-Workflow.md).
+:   The on-board bring-up script that loads the FPGA image and the openwifi driver, which creates the `sdr0` interface. See [Software Development Workflow](Software-Development-Workflow.md).
 
 `xpu`
-:   openwifi's real-time MAC core (its largest FPGA IP block): CSMA/CA, TSF timer, hardware ACK generation and reception, packet filtering, RSSI and CCA, and TX-queue gating. See [FPGA IP Cores](FPGA-IP-Cores.md#xpu-the-real-time-mac).
+:   openwifi's real-time MAC core: CSMA/CA, TSF timer, hardware ACK generation and reception, packet filtering, RSSI and CCA, and TX-queue gating. See [FPGA IP Cores](FPGA-IP-Cores.md#xpu-the-real-time-mac).
 
 Zynq / Zynq UltraScale+ (MPSoC)
 :   Xilinx SoC families. **Zynq-7000** is 32-bit (most openwifi boards). **Zynq UltraScale+ / MPSoC** is 64-bit (ZCU102), with a different boot chain.

@@ -21,7 +21,7 @@ For the exact toolchain, kernel, and image versions these builds expect, see [Ve
 - The installer download is tens of GB and requires a free AMD (Xilinx) account from the Xilinx website.
 
 !!! note "Which Vivado version?"
-    The *software* side of openwifi historically referenced Vivado 2021.1, while the current openwifi-hw build targets 2022.2. Match the version the repo README states at the time you build.
+    Use Vivado 2022.2. Older instructions that name Vivado 2021.1 no longer apply. The scripts in both repos (`prepare_kernel.sh`, `make_all.sh`, `boot_bin_gen.sh`, `prepare_adi_lib.sh`, `create_ip_repo.sh`) look for `2022.2` under `$XILINX_DIR` and stop if it is missing. If the scripts change, follow the version they check for.
 
 ## Host OS and packages
 

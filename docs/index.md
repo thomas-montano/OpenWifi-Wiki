@@ -1,5 +1,5 @@
 ---
-description: 'Plain-language guide to openwifi, the open-source, full-stack IEEE 802.11 Wi-Fi implementation for Zynq FPGA and AD9361 SDR boards, compatible with Linux mac80211.'
+description: 'Documentation for openwifi, the open-source, full-stack IEEE 802.11 Wi-Fi implementation for Zynq FPGA and AD9361 SDR boards, compatible with Linux mac80211.'
 ---
 
 <div class="ow-hero" markdown>
@@ -7,7 +7,7 @@ description: 'Plain-language guide to openwifi, the open-source, full-stack IEEE
 
 # openwifi SDR Wiki
 
-This wiki is a plain-language guide to **openwifi**, a free and open-source, full-stack IEEE 802.11 (Wi-Fi) implementation compatible with Linux `mac80211`. It runs on SDR hardware built around Xilinx Zynq SoCs, usually paired with the Analog Devices AD9361 RF front end.
+This wiki documents **openwifi**, a free and open-source, full-stack IEEE 802.11 (Wi-Fi) implementation compatible with Linux `mac80211`. It runs on SDR hardware built around Xilinx Zynq SoCs, usually paired with the Analog Devices AD9361 RF front end.
 
 <div class="ow-hero__cta" markdown>
 [Get started](Getting-Started.md){ .ow-primary }
@@ -23,7 +23,7 @@ Unlike a commercial Wi-Fi chip, every layer of openwifi is open and modifiable. 
 
 ## What openwifi can do
 
-- **802.11a/g/n operation** at 20 MHz bandwidth, with the RF front end tunable from 70 MHz to 6 GHz. Upstream also lists 2 MHz (802.11ah-style) and 10 MHz (802.11p) as adaptation targets. See the [narrow-channel setup path](FPGA-Development.md#adapting-the-design-for-10-mhz-or-2-mhz-channels).
+- **802.11a/g/n operation** at 20 MHz bandwidth, with the RF front end tunable from 70 MHz to 6 GHz. The project also lists 2 MHz (802.11ah-style) and 10 MHz (802.11p) as adaptation targets. See the [narrow-channel setup path](FPGA-Development.md#adapting-the-design-for-10-mhz-or-2-mhz-channels).
 - **All the usual roles**: Access Point, client (station), ad-hoc, and monitor mode, all driven by the standard Linux tools.
 - **A real-time low MAC in FPGA**: DCF (CSMA/CA) that meets 802.11 SIFS timing (10 µs in 2.4 GHz, 16 µs in 5 GHz). It includes hardware ACK generation, retransmission, RTS/CTS, and NAV. You can configure or disable each of these for experiments.
 - **Research features** that a commercial chip does not provide. These include per-packet CSI extraction, raw IQ capture with dozens of trigger conditions, and packet injection and fuzzing. There is also a CSI fuzzer for privacy research, full-duplex self-reception ("Wi-Fi as radar"), and time-sliced FPGA transmit queues for [network slicing](sdrctl-and-Runtime-Control.md#time-slicing-network-slicing).
@@ -144,4 +144,4 @@ The project is split across four repositories, because the driver and the FPGA d
 
 openwifi is dual-licensed. **AGPLv3** covers the open-source release, and [openwifi.tech](https://openwifi.tech) offers commercial licenses. The project includes third-party components with their own license terms, such as Analog Devices HDL, Xilinx IP like the Viterbi decoder, and the openofdm receiver. Verify each component's license for your intended use. openwifi was created at Ghent University and imec by Xianjun Jiao, Wei Liu, Michael Mehari, and contributors. Funding came from the EU H2020 ORCA project and from NLnet through NGI Zero.
 
-The pages here rewrite and restructure the documentation that lives in the openwifi repositories. The code and the repos are always the source of truth. If the wiki and the repos disagree, trust the repos, and please fix the wiki.
+These pages bring together the documentation from the openwifi repositories, organized by topic. If a page and the code disagree, the code is correct. Please fix the page or open an issue.

@@ -127,7 +127,7 @@ Every core is an AXI4-Lite slave for control (register bank named `*_s_axi.v`) a
 
 ## `xpu`, the real-time MAC
 
-`xpu` (sometimes read as "transceiver" or "eXtensible processing unit") is the central core of openwifi. Its register file `xpu_s_axi.v` (48 KB) is twice the size of any other core's register bank. By handling **microsecond-scale** operations in FPGA fabric, it lets openwifi meet 802.11 timing that a software MAC cannot.
+`xpu` (sometimes read as "transceiver" or "eXtensible processing unit") is the central core of openwifi. Its register file `xpu_s_axi.v` (47 KB) is the largest register bank, about 1.4 times the size of any other core's. By handling **microsecond-scale** operations in FPGA fabric, it lets openwifi meet 802.11 timing that a software MAC cannot.
 
 What lives inside (`ip/xpu/src/`, 21 Verilog files):
 
@@ -149,11 +149,11 @@ What lives inside (`ip/xpu/src/`, 21 Verilog files):
 
 `openofdm_tx` turns a MAC frame into baseband IQ samples. It reads bytes from a 64-bit-wide, 1024-deep TX BRAM shared with `tx_intf` and `xpu`. The 802.11 transmit chain applies scrambling, convolutional encoding, puncturing and interleaving, modulation mapping, pilot and preamble insertion, and an IFFT.
 
-Notable source (`ip/openofdm_tx/src/`, 28 files):
+Notable source (`ip/openofdm_tx/src/`, 29 files):
 
 - **`dot11_tx.v`**: the 802.11 TX datapath FSM.
 - **The IFFT pipeline**: `ifftmain.v`, `ifftstage.v`, `butterfly.v`, `hwbfly.v`, and partial-product multipliers (`bimpy.v`, `longbimpy.v`).
-- **`convenc.v` + `punc_interlv_lut.v`**: convolutional encoder and the punctured-interleave lookup ROMs. `punc_interlv_lut.v` (128 KB) is the largest single file in the whole IP tree. It holds the FEC puncturing and interleaving patterns for every 802.11 MCS.
+- **`convenc.v` + `punc_interlv_lut.v`**: convolutional encoder and the punctured-interleave lookup ROMs. `punc_interlv_lut.v` (about 123 KB) is the largest single file in the whole IP tree. It holds the FEC puncturing and interleaving patterns for every 802.11 MCS.
 - **Preamble ROMs**: `l_stf_rom.v` and `l_ltf_rom.v` (legacy short and long training fields), and `ht_stf_rom.v` and `ht_ltf_rom.v` (802.11n HT training fields).
 - **`modulation.v`, `crc32_tx.v`, `bitreverse.v`, `dpram.v`, `axi_fifo_bram.v`**: the modulation mapper, frame CRC, and buffering.
 
@@ -395,7 +395,7 @@ Its inputs, read directly from `side_ch.v` and `side_ch_control.v`, show what it
 
 Every capture carries a timestamp from the shared 64-bit TSF and an RSSI tag, so you can match it to a packet.
 
-`side_ch_control.v` (36 KB) is the capture and trigger FSM that implements the [32 trigger conditions](side_ch_ctl-and-the-Side-Channel.md#trigger-reference-register-8). A `MAX_NUM_DMA_SYMBOL` parameter sizes the internal FIFO at 8192 normally. The `SIDE_CH_LESS_BRAM` macro halves it to 4096 on small FPGAs, so Zynq-7020 boards have a lower capture-length limit.
+`side_ch_control.v` (35 KB) is the capture and trigger FSM that implements the [32 trigger conditions](side_ch_ctl-and-the-Side-Channel.md#trigger-reference-register-8). A `MAX_NUM_DMA_SYMBOL` parameter sizes the internal FIFO at 8192 normally. The `SIDE_CH_LESS_BRAM` macro halves it to 4096 on small FPGAs, so Zynq-7020 boards have a lower capture-length limit.
 
 Unlike the other cores, `side_ch` is outside the main `sdr.ko` driver. You load its kernel module `side_ch.ko` (built by `openwifi/driver/side_ch/make_driver.sh`) and run `side_ch_ctl` on demand. See [Research Features](Research-Features.md) for the full workflow, and [side_ch_ctl and the Side Channel](side_ch_ctl-and-the-Side-Channel.md) for the command grammar and register map.
 

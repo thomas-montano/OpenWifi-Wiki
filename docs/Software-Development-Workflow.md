@@ -35,7 +35,7 @@ Find the row that matches what you changed and follow its link to the full instr
 | **`inject_80211` / `analyze_80211`** (`user_space/inject_80211/`) | `scp` the source to the board, then **on the board**: `make` | Run it ([usage](Operating-Modes.md#packet-injection-and-fuzzing)) |
 | **Helper scripts** (`user_space/*.sh`, `*.py`) | Nothing to compile. Copy them to the board with `scp`. The Python display scripts (`side_info_display.py`, `iq_capture.py`, and others) run on the PC instead | Run them |
 | **FPGA Verilog / IP cores** | On the PC: rebuild the bitstream ([FPGA Development](FPGA-Development.md)), then `boot_bin_gen.sh` and `scp system_top.bit.bin` to the board | `./wgd.sh`, no reboot needed ([details](FPGA-Development.md#updating-the-fpga-image-on-a-running-board)) |
-| **Whole openwifi version** (a newer upstream checkout) | Kernel if it changed, then `user_space/`, the on-board tools, the driver, and the FPGA image, all from the same commit | Step by step in [Upgrading a board to a new openwifi version](Boot-Kernel-Device-Tree.md#upgrading-a-board-to-a-new-openwifi-version) |
+| **Whole openwifi version** (a newer openwifi checkout) | Kernel if it changed, then `user_space/`, the on-board tools, the driver, and the FPGA image, all from the same commit | Step by step in [Upgrading a board to a new openwifi version](Boot-Kernel-Device-Tree.md#upgrading-a-board-to-a-new-openwifi-version) |
 | **Kernel config or device tree** | Rebuild on the PC, then transfer and populate on the board. Full step-by-step in [Updating a board to a newly built kernel](Boot-Kernel-Device-Tree.md#updating-a-board-to-a-newly-built-kernel), short form under [bulk helpers](#bulk-update-helpers) | Reboot. A kernel **version** change also needs the driver rebuilt and the populate script run twice, and `sdrctl`/`side_ch_ctl` rebuilt to avoid [crashes from the mismatch](Troubleshooting.md#tool-crashes) |
 
 ### The driver iteration loop
@@ -142,7 +142,7 @@ This makes it easy to keep, share, and switch between variants. To build a varia
 
 ### test_mode
 
-`insmod sdr.ko test_mode=<value>` (or passing the value to `wgd.sh`) toggles experimental features via the `test_mode` global in `sdr.c`. Upstream `doc/README.md` says `fosdem.sh` also accepts the value, but the `test_mode` lines in [`fosdem.sh`](https://github.com/open-sdr/openwifi/blob/master/user_space/fosdem.sh) are commented out, so it has no effect there. Two bits are in use. **Bit 0 turns on A-MPDU aggregation** (default off), so `./wgd.sh 1` gives you aggregation. **Bit 1 advertises the short guard interval**, which only the driver source documents. See [Wi-Fi 4 & Wi-Fi 6 Features](Wi-Fi-4-and-Wi-Fi-6.md#short-guard-interval) for both in practice.
+`insmod sdr.ko test_mode=<value>` (or passing the value to `wgd.sh`) toggles experimental features via the `test_mode` global in `sdr.c`. `doc/README.md` says `fosdem.sh` also accepts the value, but the `test_mode` lines in [`fosdem.sh`](https://github.com/open-sdr/openwifi/blob/master/user_space/fosdem.sh) are commented out, so it has no effect there. Two bits are in use. **Bit 0 turns on A-MPDU aggregation** (default off), so `./wgd.sh 1` gives you aggregation. **Bit 1 advertises the short guard interval**, which only the driver source documents. See [Wi-Fi 4 & Wi-Fi 6 Features](Wi-Fi-4-and-Wi-Fi-6.md#short-guard-interval) for both in practice.
 
 ## Rebuilding sdrctl
 

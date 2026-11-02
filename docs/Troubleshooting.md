@@ -54,7 +54,7 @@ Zynq> saveenv
 Linux detects only half the RAM. An old `u-boot.elf` hard-coded 512 MB. Rebuild U-Boot from [analogdevicesinc/u-boot-xlnx](https://github.com/analogdevicesinc/u-boot-xlnx) and regenerate `BOOT.BIN` (build flow: [Boot, Kernel & Device Tree](Boot-Kernel-Device-Tree.md#32-bit-vs-64-bit-boot)):
 
 ```bash
-source environment_setting.sh          # from the u-boot-xlnx checkout
+source environment_setting.sh          # your cross-toolchain setup, for example $XILINX_DIR/Vitis/2022.2/settings64.sh
 export ARCH=arm
 export CROSS_COMPILE=arm-linux-gnueabihf-
 make zynq_adrv9361_defconfig && make -j8 && make u-boot.elf
@@ -119,9 +119,9 @@ Same root cause as the [bad/empty EEPROM](#fmcomms-board-causes-a-linux-crash-ba
 
 A different failure from the `0xFF` case above. `0x00` means the AD9361 or FMCOMMS front end **did not power up correctly**. The driver reads back all zeros because the chip is not responding, and a bad EEPROM is not the cause. Check the board's power. Make sure the FMCOMMS card is fully seated, its supply rails are up, and the carrier delivers enough current to the front end.
 
-### ZCU102 kernel panic (RTC, capacitor, and current load)
+### Kernel panic at boot (RTC, or capacitor and current load)
 
-Some ZCU102 boards kernel-panic during boot, a failure traced to the RTC capacitor and current load. Tracked in issues [#366](https://github.com/open-sdr/openwifi/issues/366) and [#457](https://github.com/open-sdr/openwifi/issues/457).
+The known-issue note lists two separate hardware causes. Some ZCU102 boards kernel-panic during boot because of the RTC, tracked in issue [#366](https://github.com/open-sdr/openwifi/issues/366). Issue [#457](https://github.com/open-sdr/openwifi/issues/457) traces a boot-time kernel panic on a custom Zynq-7020 and AD9363 board to the board's capacitors and current load.
 
 ## Storage and long-run stability
 

@@ -27,7 +27,7 @@ Unlike every other openwifi FPGA module, `side_ch` is **not** driven by `sdr.ko`
 
 ## Building
 
-Prebuilt SD images already ship both `side_ch.ko` and `side_ch_ctl`, with `side_ch_ctl` on `$PATH` (see [Building SD Images](Building-SD-Images.md)). The SD image can be older than your source tree, so after updating a board, rebuild both pieces from the current source rather than trusting what shipped on the image.
+Prebuilt SD images already ship both `side_ch.ko` and `side_ch_ctl`. On Kuiper and Buildroot images they are in `/root/openwifi`, and OpenWrt images also put `side_ch_ctl` on `$PATH` (see [Building SD Images](Building-SD-Images.md)). The SD image can be older than your source tree, so after updating a board, rebuild both pieces from the current source rather than trusting what shipped on the image.
 
 `side_ch_ctl` is a user-space tool, so it compiles directly on the board. From your host's `openwifi` checkout:
 
@@ -215,7 +215,7 @@ These are the `side_ch` core's `slv_regN` in `side_ch.v`. Several registers **me
 | 19 | both | Counter event-source select: bits 0, 4, 8, 12, 16, 20 choose the source for registers 26–31 respectively. |
 
 !!! note "Register 3 does not choose where the IQ comes from"
-    Its bit 0 switches the core between CSI and IQ mode, and bits 5-4 choose what gets packed into each 64-bit word (including whether antenna 1's samples ride along). The tap point (off the air, or your own transmit) is **register 5 bits 2-1**, and nothing in register 3 touches it. The upstream [IQ app note](https://github.com/open-sdr/openwifi/blob/master/doc/app_notes/iq.md) annotates `wh3h01` with "configure the IQ data source." The command only works in the quick start because register 5 is already 0 (received IQ). Register 3 does not set the source.
+    Its bit 0 switches the core between CSI and IQ mode, and bits 5-4 choose what gets packed into each 64-bit word (including whether antenna 1's samples ride along). The tap point (off the air, or your own transmit) is **register 5 bits 2-1**, and nothing in register 3 touches it. The [IQ app note](https://github.com/open-sdr/openwifi/blob/master/doc/app_notes/iq.md) annotates `wh3h01` with "configure the IQ data source." The command only works in the quick start because register 5 is already 0 (received IQ). Register 3 does not set the source.
 
 ### Read-only
 
@@ -315,7 +315,7 @@ Nothing is matching or triggering. In CSI mode, reset the filter with `wh1h0001`
 Reloading `side_ch.ko` does not return the core to a clean state. `dev_probe()` writes only registers 0, 1, 3, 4, 8, 11, and 12, and it writes registers 3, 11, and 12 only in IQ mode. Registers 5, 6, 7, 9, 10, and 19 keep whatever you last put there. The reset it pulses through register 0 drives the capture FSM, not the register file, which clears only when the FPGA is reconfigured. This causes two problems:
 
 - A leftover `wh5h4` from a loopback test still taps `tx_intf` after the reload, so the IQ quick start silently captures your own transmit instead of the air. Register 5 needs no enabling bit, so nothing else hides the mistake.
-- Going from IQ mode back to CSI mode by reloading with no `iq_len_init` should leave register 3 bit 0 **still set**, because the driver only writes that register when `iq_len_init > 0`. The FPGA would then stay in IQ mode while the driver frames for CSI. This follows from the source but is not yet confirmed on hardware (see [the suspected upstream bug](#a-suspected-upstream-bug-unverified)).
+- Going from IQ mode back to CSI mode by reloading with no `iq_len_init` should leave register 3 bit 0 **still set**, because the driver only writes that register when `iq_len_init > 0`. The FPGA would then stay in IQ mode while the driver frames for CSI. This follows from the source but is not yet confirmed on hardware (see [the suspected driver bug](#a-suspected-driver-bug-unverified)).
 
 Write the stale registers back by hand (`wh5d0`, `wh3d0`), or reload the bitstream with `./wgd.sh` for a guaranteed clean state. On a Buildroot image plain `./wgd.sh` keeps the FPGA that U-Boot loaded, so force the reprogram with `OPENWIFI_RELOAD_FPGA=1 ./wgd.sh`.
 
@@ -329,9 +329,9 @@ The FIFO is half-size there. Confirm with `rh22`, keep `iq_len_init` ≤ 4095, a
 
 ---
 
-## A suspected upstream bug (unverified)
+## A suspected driver bug (unverified)
 
-This was found by reading the openwifi source, not by testing on a running board, and it is not reported upstream. **Treat it as unconfirmed.** Check it before relying on it, and raise an issue against [open-sdr/openwifi](https://github.com/open-sdr/openwifi/issues) if it holds.
+This was found by reading the openwifi source, not by testing on a running board, and no issue has been filed for it yet. **Treat it as unconfirmed.** Check it before relying on it, and raise an issue against [open-sdr/openwifi](https://github.com/open-sdr/openwifi/issues) if it holds.
 
 !!! warning "Register 3 survives a reload back into CSI mode"
 

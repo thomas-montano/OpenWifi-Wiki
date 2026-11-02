@@ -19,7 +19,7 @@ Every figure carries a **footnote** that points to its source so you can check i
 | Parameter | Value |
 |---|---|
 | Wi-Fi standards | 802.11a, 802.11g, and 802.11n (Wi-Fi 4), 20 MHz, single spatial stream[^readme] |
-| Channel bandwidth | 20 MHz in the released design. Upstream lists 10 MHz and 2 MHz as adaptation targets. Both need FPGA, RF, and driver changes (see [Narrow-channel setup](FPGA-Development.md#adapting-the-design-for-10-mhz-or-2-mhz-channels)).[^readme] |
+| Channel bandwidth | 20 MHz in the released design. The README lists 10 MHz and 2 MHz as adaptation targets. Both need FPGA, RF, and driver changes (see [Narrow-channel setup](FPGA-Development.md#adapting-the-design-for-10-mhz-or-2-mhz-channels)).[^readme] |
 | RF tuning range | 70 MHz–6 GHz (Analog Devices AD9361 or AD9364 front end)[^faq] |
 | Baseband transceiver sample rate | 20 Msps (20 MHz mode)[^docreadme] |
 | AD9361 ↔ FPGA sample rate | 40 Msps (decimated and interpolated to 20 Msps in the FPGA)[^docreadme] |
@@ -91,7 +91,7 @@ openwifi's real-time "low MAC" (the `xpu` core) runs the DCF (CSMA/CA) state mac
 
 ## Measured performance
 
-These are openwifi's published numbers.[^readme] Upstream gives the throughput figures as a best case, with A-MPDU aggregation on. The EVM and sensitivity figures were measured on **FMCOMMS2 at 2.4 GHz**, over cable and over the air. Your results depend on board, RF path, and configuration.
+These are openwifi's published numbers.[^readme] The README gives the throughput figures as a best case, with A-MPDU aggregation on. The EVM and sensitivity figures were measured on **FMCOMMS2 at 2.4 GHz**, over cable and over the air. Your results depend on board, RF path, and configuration.
 
 | Metric | Value | Conditions |
 |---|---|---|
@@ -113,7 +113,7 @@ openwifi is built to fit the **lowest-end supported FPGA (Xilinx Zynq-7020)**, s
 | ZC706, Zynq-7045 (`xc7z045`) | ~21k | 73.5 | 98 | up to 200 MHz[^release] |
 
 !!! note "These are openwifi-core numbers"
-    The utilization above is for the openwifi design. A complete bitstream also includes peripheral logic (DMA, AXI interconnect, the ADI reference design, clocking), so the *total* device utilization is higher. The figures were published in the openwifi release notes. Later releases ship full `report_utilization` archives as release assets, `20220330084857-pre-release-report.zip` for `v1.3.0` and `openwifi-1.5.0-shahecheng-utilization.zip` for `v1.5.0`. Use them if you need the exact breakdown for a specific version.[^release]
+    The utilization above is for the openwifi design. A complete bitstream also includes peripheral logic (DMA, AXI interconnect, the ADI reference design, clocking), so the *total* device utilization is higher. The figures were published in the openwifi release notes. Later release notes link full `report_utilization` archives, `20220330084857-pre-release-report.zip` for `v1.3.0` and `openwifi-1.5.0-shahecheng-utilization.zip` for `v1.5.0`. Use them if you need the exact breakdown for a specific version.[^release]
 
 **Clock and speed grade.** The `openofdm_tx` core was optimized so the whole design closes timing at **100 MHz on the low-speed-grade 7020 (−1)**. Higher-grade parts run at 200 MHz. The release notes cite the Zynq-7035 in the faster speed grades −2 and −2L. The ZC706's Zynq-7045 offers the same 200 MHz option.[^release] The baseband clock is set by `NUM_CLK_PER_US` in `openwifi-hw/boards/openwifi.tcl` (default 100).[^tcl] Per-board options are in [Supported Boards](Supported-Boards.md#the-baseband-clock-per-board).
 

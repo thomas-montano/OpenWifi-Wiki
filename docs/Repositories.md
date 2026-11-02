@@ -53,7 +53,7 @@ The project has four repositories, each with its own job and toolchain.
   <text x="573" y="83" text-anchor="middle" font-size="13.5" font-weight="700" fill="#ffffff">openwifi-hw-img</text>
   <text x="482" y="126" fill="currentColor">Pre-built</text>
   <text x="482" y="145" fill="currentColor">bitstreams per</text>
-  <text x="482" y="164" fill="currentColor">board (.xsa / .bit)</text>
+  <text x="482" y="164" fill="currentColor">board (.xsa)</text>
   <line x1="480" y1="262" x2="666" y2="262" stroke="currentColor" stroke-opacity="0.12"/>
   <text x="482" y="281" font-size="11" font-weight="600" fill="#c2740a">none, just download</text>
 
@@ -88,7 +88,7 @@ The project has four repositories, each with its own job and toolchain.
 |---|---|---|
 | **[openwifi](https://github.com/open-sdr/openwifi)** | The Linux kernel driver, `sdrctl` and other user-space tools, capture and demo scripts, SD-card boot files (kernel patches, device trees, U-Boot), and **all the documentation** | Rebuilding the driver, changing runtime behavior, writing scripts, flashing and booting a board, reading app notes |
 | **[openwifi-hw](https://github.com/open-sdr/openwifi-hw)** | The **FPGA design**: openwifi's custom IP cores (`xpu`, `openofdm_tx`, `tx_intf`, `rx_intf`, `side_ch`, and the `openofdm_rx` submodule) plus a Vivado project per supported board | Modifying the PHY or real-time MAC, adding a board, rebuilding the bitstream |
-| **[openwifi-hw-img](https://github.com/open-sdr/openwifi-hw-img)** | **Prebuilt FPGA bitstreams** for each board (`.xsa`, bitstream, ILA `.ltx`, init files under `boards/<board_name>/sdk/`), plus the CLA and documentation PDFs | You want a working bitstream *without* installing Vivado or waiting hours for synthesis |
+| **[openwifi-hw-img](https://github.com/open-sdr/openwifi-hw-img)** | **Prebuilt FPGA bitstreams** for each board: a `system_top.xsa` (which contains the bitstream) and a `git_info.txt` build record under `boards/<board_name>/sdk/`, plus the CLA and documentation PDFs | You want a working bitstream *without* installing Vivado or waiting hours for synthesis |
 | **[openofdm](https://github.com/open-sdr/openofdm)** | The 802.11 **OFDM receiver** that `openofdm_rx` is based on. openwifi's improvements live on the `dot11zynq` branch (and `dot11zynq_hls` for the HLS variant). Originally by [jhshi](https://github.com/jhshi/openofdm) | Deep receiver work (synchronization, channel estimation, Viterbi decode). Usually you let the build script fetch it |
 
 `openwifi-hw-img` is pulled in by the software build scripts, and `openofdm` is fetched as a git submodule of `openwifi-hw`.
@@ -100,18 +100,18 @@ The project has four repositories, each with its own job and toolchain.
 
 - **At run time**, three things run on the board. These are the FPGA bitstream (`system_top.bit.bin`), the kernel driver (`sdr.ko` and related modules), and the user-space tools. The driver and tools come from `openwifi`. The bitstream is built from `openwifi-hw` or downloaded from `openwifi-hw-img`.
 - **At build time**, the driver must agree with the FPGA on the **register map**. `openwifi/driver/hw_def.h` holds the addresses the driver writes, while each core's `*_s_axi.v` in `openwifi-hw/ip/` implements the registers in the FPGA. A driver file and its FPGA counterpart usually share a name (`xpu.c` and `xpu.v`). The two repos are versioned together because those definitions must match.
-- **The submodule chain**: `openwifi-hw` pulls in two submodules. The Analog Devices FPGA reference design, [`analogdevicesinc/hdl`](https://github.com/analogdevicesinc/hdl), sits at `adi-hdl/` and is pinned to tag `2022_R2`. openwifi is built on top of it. `openofdm` (branch `dot11zynq`) sits at `ip/openofdm_rx/`. A fresh `openwifi-hw` clone has these as **empty directories** until you run `./prepare_adi_lib.sh` and `./get_ip_openofdm_rx.sh` (or `git submodule update --init`).
+- **The submodule chain**: `openwifi-hw` pulls in two submodules. The Analog Devices FPGA reference design, [`analogdevicesinc/hdl`](https://github.com/analogdevicesinc/hdl), sits at `adi-hdl/`, and `prepare_adi_lib.sh` checks out its tag `2022_R2`. openwifi is built on top of it. `openofdm` sits at `ip/openofdm_rx/`, pinned to a commit on its `dot11zynq` branch. A fresh `openwifi-hw` clone has these as **empty directories** until you run `./prepare_adi_lib.sh` and `./get_ip_openofdm_rx.sh` (or `git submodule update --init`).
 
 ## Versions this wiki targets
 
-openwifi pins several toolchains and upstream projects, and they intentionally don't all share a version number. A 2022-era FPGA toolchain paired with a current kernel is normal here. If a build script or a repo README states a version different from the table below, trust the repo. Treat this table as a snapshot from the last reconciliation with the repos (**September 26, 2026**). Bumping it when they move is a welcome contribution.
+openwifi pins several toolchains and upstream projects, and they intentionally don't all share a version number. A 2022-era FPGA toolchain paired with a current kernel is normal here. If a build script checks for a version different from the table below, follow the script. Treat this table as a snapshot from the last reconciliation with the repos (**November 2, 2026**). Bumping it when they move is a welcome contribution.
 
 | Component | Target version | Set or pinned in | Notes |
 |---|---|---|---|
-| Vivado + Vitis | **2022.2** (needs `Vitis`, not `Vitis_HLS`) | openwifi-hw build scripts | Free tier suffices for Zynq-7020 boards. ZC706, ZCU102, and Z7035 need a license to *rebuild* the FPGA. See [FPGA Development](FPGA-Development.md#prerequisites). |
-| ADI HDL reference design (`adi-hdl` submodule) | tag **`2022_R2`** | `openwifi-hw` submodule pin | The FPGA design is built on top of it (`prepare_adi_lib.sh`). |
+| Vivado + Vitis | **2022.2** (needs `Vitis`, not `Vitis_HLS`) | openwifi-hw build scripts | Free tier suffices for Zynq-7020 boards. ZC706, ZCU102, and Z7035 need a license to *rebuild* the FPGA. The openwifi and openwifi-hw build scripts require this version. Older instructions that name 2021.1 no longer apply. See [FPGA Development](FPGA-Development.md#prerequisites). |
+| ADI HDL reference design (`adi-hdl` submodule) | tag **`2022_R2`** | `prepare_adi_lib.sh` | The FPGA design is built on top of it. The script checks out the tag, so the older commit recorded in the submodule does not apply. |
 | ADI Linux kernel (`adi-linux` and `adi-linux-64`) | branch **`2026_R1`**, Linux **6.12** | `prepare_kernel.sh` | Patched by `ad9361_v6_12.patch`. See [Boot, Kernel & Device Tree](Boot-Kernel-Device-Tree.md#the-kernel). |
-| `openofdm` receiver (submodule) | branch **`dot11zynq`** (HLS variant **`dot11zynq_hls`**) | `get_ip_openofdm_rx.sh` | Backs the `openofdm_rx` core. |
+| `openofdm` receiver (submodule) | commit **`2bb3ad1`** on branch **`dot11zynq`** (HLS variant on **`dot11zynq_hls`**) | `openwifi-hw` submodule pin, checked out by `get_ip_openofdm_rx.sh` | Backs the `openofdm_rx` core. |
 | ADI Kuiper base image | **2023-12-13 release** (`image_2023-12-13-ADI-Kuiper-full.zip`, tagged `2022_r2`) | flashed manually | Only the starting rootfs. You build a current kernel on top. See [Building SD Images](Building-SD-Images.md#adi-kuiper-build-from-scratch). |
 | OpenWrt (alternative to Kuiper) | branch **`openwrt-openwifi_v25.12.5`** = OpenWrt **25.12.5**, Linux **6.12**, mac80211 **6.18** | `openwrt-openwifi` repo | Docker-only build, no Vivado. See [Building SD Images](Building-SD-Images.md#openwrt). |
 | Buildroot (alternative to Kuiper) | Buildroot **`2025.02.11`**, Linux **6.12**, U-Boot **`xlnx_rebase_v2024.01_2024.2`** | `buildroot` submodule + `buildroot-external/` | Small, fast-booting deployment image for `antsdr_e200`, `antsdr`, `e310v2`, and the QSPI-booted `plutosky_r2`. No Vivado, reuses a prebuilt XSA. See [Building SD Images](Building-SD-Images.md#buildroot). |
@@ -119,7 +119,7 @@ openwifi pins several toolchains and upstream projects, and they intentionally d
 | Build-host OS | **Ubuntu 18, 20, or 22 LTS** | not pinned | Ubuntu 24 needs `libtinfo5` installed manually (see [Environment Setup](Development-Environment-Setup.md#host-os-and-packages)). |
 
 !!! note "Driver and FPGA ship as a matched set"
-    openwifi's releases are codenamed (for example `v1.5.0` *shahecheng*, `v1.2.0` *leuven*) and version the driver and the FPGA design together, because the two sides share the register-map contract described above. Run a driver against the bitstream from the same release rather than mixing across versions. The `wgd.sh` hot-reload flow exists to swap matched driver + FPGA pairs on a running board without rebooting (see [Software Development Workflow](Software-Development-Workflow.md)). There is no formal cross-version compatibility matrix, so when in doubt, match versions. The full release history and notes live on the [openwifi releases page](https://github.com/open-sdr/openwifi/releases).
+    openwifi's releases are codenamed (for example `v1.5.0` *shahecheng*, `1.2.0` *leuven*) and version the driver and the FPGA design together, because the two sides share the register-map contract described above. Run a driver against the bitstream from the same release rather than mixing across versions. The `wgd.sh` hot-reload flow exists to swap matched driver + FPGA pairs on a running board without rebooting (see [Software Development Workflow](Software-Development-Workflow.md)). There is no formal cross-version compatibility matrix, so when in doubt, match versions. The full release history and notes live on the [openwifi releases page](https://github.com/open-sdr/openwifi/releases).
 
 ## Where do you look for…?
 
@@ -144,8 +144,8 @@ Both repos: `openwifi-hw/boards/<board_name>/` (Vivado project) and `openwifi/ke
 ### …a prebuilt bitstream (skip synthesis)
 [`openwifi-hw-img`](https://github.com/open-sdr/openwifi-hw-img), `boards/<board_name>/sdk/`.
 
-### …the authoritative docs and app notes
-`openwifi/doc/` and `openwifi/doc/app_notes/`. The wiki pages reorganize that material thematically. When the wiki and the repo disagree, trust the repo, and please fix the wiki.
+### …the in-repo docs and app notes
+`openwifi/doc/` and `openwifi/doc/app_notes/`. The wiki pages organize that material by topic. If a page and the code disagree, the code is correct, so please fix the page.
 
 ## Repository directory maps
 
@@ -154,7 +154,7 @@ Both repos: `openwifi-hw/boards/<board_name>/` (Vivado project) and `openwifi/ke
 ```text
 openwifi/
 ├── driver/            # Linux kernel driver (sdr.c, hw_def.h, sdrctl_intf.c, sysfs_intf.c, per-core sub-drivers)
-├── user_space/        # sdrctl, side_ch_ctl, inject_80211, ~70 helper scripts, demo configs
+├── user_space/        # sdrctl, side_ch_ctl, inject_80211, about 60 helper scripts, demo configs
 │   ├── sdrctl_src/         # the sdrctl CLI
 │   ├── side_ch_ctl_src/    # side_ch_ctl + Python/MATLAB CSI/IQ display scripts
 │   ├── inject_80211/       # packet injection + analyze_80211
@@ -180,7 +180,7 @@ openwifi-hw/
 │   ├── rx_intf/            # ADC-side interface + RX DMA
 │   └── side_ch/            # CSI / raw-IQ capture side channel
 ├── boards/            # one Vivado project per board_name (system.bd, .xdc, system_top.v, TCL)
-├── adi-hdl/           # submodule → analogdevicesinc/hdl (ADI reference design), tag 2022_R2
+├── adi-hdl/           # submodule → analogdevicesinc/hdl (ADI reference design), checked out at tag 2022_R2
 ├── prepare_adi_lib.sh, prepare_adi_board_ip.sh, get_ip_openofdm_rx.sh
 ├── gpio_led.md        # which FPGA signals are routed to board LEDs / PMOD test points
 └── README.md

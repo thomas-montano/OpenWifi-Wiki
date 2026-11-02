@@ -102,8 +102,8 @@ insmod ./drv_and_fpga/side_ch.ko
 
 # in a second ssh session, inject continuously:
 cd /root/openwifi/inject_80211 && make
-./inject_80211 -m g -r 4 -t d -e 0 -b 5a -n 99999999 -s 20 -d 1000 sdr0
-# (802.11n variant: -m n -r 4 -t d -e 8 -b 5a ...)
+./inject_80211 -m g -r 4 -t d -e 0 -b 66554433225a -n 99999999 -s 20 -d 1000 sdr0
+# (802.11n variant: -m n -r 4 -t d -e 8 -b 66554433225a ...)
 ```
 
 Then on the PC, `python3 side_info_display.py 8 waterfall` shows CSI, a CSI waterfall, equalizer output, and frequency offset. The waterfall visibly changes as objects or people move between the antennas. Data logs to `side_info.txt` for offline analysis. The key control is `xpu` register 1 (`xpu 1 1` unmutes self-RX).
@@ -219,7 +219,7 @@ On AD9361 boards (FMCOMMS2/3, ADRV9361-Z7035) you can capture IQ from the *monit
 
 First set rx1's AGC to manual at a low gain in `rf_init.sh`, with `echo manual > in_voltage1_gain_control_mode` and `echo 20 > in_voltage1_hardwaregain`. The script runs these in the AD9361's `/sys/bus/iio/devices/iio:deviceN/` directory, which it finds by scanning `iio:device0` through `iio:device4`. Then use a short `pre_trigger_len` and a TX-done trigger (`wh8d23`). You can also use the dedicated collision trigger `wh8d29`, which fires when rx1 IQ is above a threshold while this SDR is transmitting. Capture with `iq_capture_2ant.py`. The full recipe is in the [dual-antenna IQ note](https://github.com/open-sdr/openwifi/blob/master/doc/app_notes/iq_2ant.md).
 
-The same note has two more quick starts that capture the board's **own TX IQ** from inside the FPGA instead of anything received over the air. The first uses trigger 16, a `tx_control_state` match (see the [trigger reference](side_ch_ctl-and-the-Side-Channel.md#trigger-reference-register-8)). Set `wh8d16`, then `wh5h2` to tap the IQ at the `openofdm_tx` core or `wh5h4` to tap it at `tx_intf`. The upstream note describes this combination as firing when the transmitter starts, while the RTL defines trigger 16 as a control-state hit with the target state set by `wh5`. The second is a free-running mode that streams transmit baseband continuously (`wh8d0` with source `wh5h3` or `wh5h5`). Both use a short capture window (`iq_len_init=511`, enough for the preambles and a few OFDM symbols) and the same `iq_capture_2ant.py` display.
+The same note has two more quick starts that capture the board's **own TX IQ** from inside the FPGA instead of anything received over the air. The first uses trigger 16, a `tx_control_state` match (see the [trigger reference](side_ch_ctl-and-the-Side-Channel.md#trigger-reference-register-8)). Set `wh8d16`, then `wh5h2` to tap the IQ at the `openofdm_tx` core or `wh5h4` to tap it at `tx_intf`. The app note describes this combination as firing when the transmitter starts, while the RTL defines trigger 16 as a control-state hit with the target state set by `wh5`. The second is a free-running mode that streams transmit baseband continuously (`wh8d0` with source `wh5h3` or `wh5h5`). Both use a short capture window (`iq_len_init=511`, enough for the preambles and a few OFDM symbols) and the same `iq_capture_2ant.py` display.
 
 <figure markdown>
 ![Dual-antenna collision-capture setup](assets/img/iq_2ant-setup.png){ width="520" }

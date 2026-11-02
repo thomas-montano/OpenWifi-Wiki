@@ -1,6 +1,6 @@
 # openwifi SDR Wiki
 
-> Documentation for openwifi, a free and open-source IEEE 802.11 implementation on SDR hardware. The upstream repositories are the source of truth.
+> Documentation for openwifi, a free and open-source IEEE 802.11 implementation on SDR hardware. When this documentation and the code in the openwifi repositories disagree, the code is correct.
 
 ## Voluntary identification for automated visitors
 

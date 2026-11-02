@@ -79,7 +79,7 @@ This section is for people who know RF and digital modulation but haven't worked
 | Wi-Fi 6 | 802.11ax | Commercial only, via [openwifi.tech](https://openwifi.tech)[^readme] |
 
 !!! note "Narrower channels (2 MHz and 10 MHz)"
-    The upstream README lists 2 MHz for 802.11ah-style sub-GHz work and 10 MHz for 802.11p vehicular work. These are adaptation targets for the 20 MHz design, not complete implementations of either standard. See [Adapting the design for 10 MHz or 2 MHz channels](FPGA-Development.md#adapting-the-design-for-10-mhz-or-2-mhz-channels) for the FPGA, RF, driver, and timing changes. [Frequency tuning](sdrctl-and-Runtime-Control.md#frequency-locking-and-arbitrary-tuning) changes the center frequency only.
+    The openwifi README lists 2 MHz for 802.11ah-style sub-GHz work and 10 MHz for 802.11p vehicular work. These are adaptation targets for the 20 MHz design, not complete implementations of either standard. See [Adapting the design for 10 MHz or 2 MHz channels](FPGA-Development.md#adapting-the-design-for-10-mhz-or-2-mhz-channels) for the FPGA, RF, driver, and timing changes. [Frequency tuning](sdrctl-and-Runtime-Control.md#frequency-locking-and-arbitrary-tuning) changes the center frequency only.
 
 ### Why there's no Wi-Fi 5
 
@@ -310,7 +310,7 @@ A capture with `tcpdump` on a monitor interface shows the same information in th
 
 ### Status
 
-Wi-Fi 6 is **not in the open-source release**. The README lists "802.11ax and more advanced features" under the commercial offering at [openwifi.tech](https://openwifi.tech), which provides subscriptions on top of the AGPLv3 baseline (academic discounts are available).[^readme]
+Wi-Fi 6 is **not in the open-source release**. The README lists "802.11ax and more advanced features" under the commercial offering at [openwifi.tech](https://openwifi.tech), which provides subscriptions on top of the AGPLv3 baseline.[^readme]
 
 The open driver's register map already reserves slots for VHT (11ac) and HE (11ax) rate overrides, both marked *not implemented*.[^docreadme] The open code is the platform that Wi-Fi 6 work builds on. It does not include the Wi-Fi 6 PHY.
 

@@ -134,7 +134,7 @@ Watch them arrive on any other device sniffing channel 11.
 | `-r` | Rate / MCS index (0–7) |
 | `-t` | Packet type: `m`/`c`/`d`/`r` = management/control/data/reserved |
 | `-e` | Subtype (hex). See the three subtype maps below the table |
-| `-a` / `-b` | Last byte of addr1 / addr2 (hex) |
+| `-a` / `-b` | addr1 / addr2 as a full MAC address in 12 hex digits, for example `665544332211` for `66:55:44:33:22:11` |
 | `-i` | Short-GI flag (0/1) |
 | `-n` | Number of packets |
 | `-s` | Payload size (bytes) |
@@ -166,7 +166,7 @@ tcpdump -i mon0 -w trace.pcap 'wlan addr1 ff:ff:ff:ff:ff:ff and wlan addr2 66:55
 analyze_80211 trace.pcap
 ```
 
-(The addresses `ff:ff:ff:ff:ff:ff` / `66:55:44:33:22:11` are the injector's defaults.) For a ready-made fuzzing framework, see `owfuzz`, a third-party 802.11 protocol fuzzer built on openwifi.
+Since April 2025, `inject_80211` writes the full `-a` and `-b` values into the header, and without them it sends `00:00:00:00:00:01` and `00:00:00:00:00:02`. Inject with `-a ffffffffffff -b 665544332211` so the frames match the filter. For a ready-made fuzzing framework, see `owfuzz`, a third-party 802.11 protocol fuzzer built on openwifi.
 
 ## About 802.11b
 

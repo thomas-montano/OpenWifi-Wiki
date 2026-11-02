@@ -185,7 +185,7 @@ The end state on a running board is this layout, and both halves of it have to b
 
 A board that runs a new openwifi version needs four sets of files from the same commit: the kernel, the driver and FPGA image, the `user_space/` scripts and configs, and the tools compiled on the board. The [kernel update procedure](#updating-a-board-to-a-newly-built-kernel) below covers the kernel and the driver only. It leaves the scripts in `/root/openwifi/` at the version the SD image shipped with. Old scripts next to a new driver fail in confusing ways, for example a `wgd.sh` that does not know a newer option, or an `sdrctl` built from old sources.
 
-The upstream [README](https://github.com/open-sdr/openwifi#update-fpga) recommends always copying the newest files in the [`user_space`](https://github.com/open-sdr/openwifi/tree/master/user_space) directory onto the board, but it gives no command for it, and no upstream script does it on a running board. Despite its name, `transfer_driver_userspace_to_board.sh` copies only the driver `.ko` files. `update_sdcard.sh` copies all of `user_space/`, but only when it writes a new SD card. The procedure below does the same on a running board and keeps the files that exist only on the board.
+The openwifi [README](https://github.com/open-sdr/openwifi#update-fpga) recommends always copying the newest files in the [`user_space`](https://github.com/open-sdr/openwifi/tree/master/user_space) directory onto the board, but it gives no command for it, and no openwifi script does it on a running board. Despite its name, `transfer_driver_userspace_to_board.sh` copies only the driver `.ko` files. `update_sdcard.sh` copies all of `user_space/`, but only when it writes a new SD card. The procedure below does the same on a running board and keeps the files that exist only on the board.
 
 The steps assume an ADI Kuiper image, the board at `192.168.10.122` with its files in `/root/openwifi/`, and the [environment variables](Software-Development-Workflow.md#environment-setup) set on the PC. On the RFSoC4x2 the home directory is `/home/xilinx` instead of `/root`. A Buildroot board does not need this procedure, because its [update package](Building-SD-Images.md#update-over-ethernet) replaces the whole rootfs, scripts included.
 
@@ -281,14 +281,14 @@ tar -xzf /root/user_space.tar.gz
 Files with the same name are replaced. The driver modules, the bitstream, the compiled tools, and anything else that is not in the archive stay as they are. Do not delete `/root/openwifi/` first, because that removes the board-support modules that only the kernel update puts there, and `wgd.sh` then fails.
 
 !!! warning "Edited config files are overwritten"
-    If you changed a file that comes from `user_space/`, such as `hostapd-openwifi.conf` or `dhcpd.conf`, the upstream version has now replaced it. Compare it with the copy in the backup from step 3 and re-apply your changes:
+    If you changed a file that comes from `user_space/`, such as `hostapd-openwifi.conf` or `dhcpd.conf`, the version from the repo has now replaced it. Compare it with the copy in the backup from step 3 and re-apply your changes:
 
     ```bash
     tar -xzf /root/openwifi-backup-*.tar.gz -O openwifi/hostapd-openwifi.conf | diff - hostapd-openwifi.conf
     ```
 
-!!! note "Files removed upstream stay on the board"
-    The archive only adds and replaces files. A script that upstream deleted or renamed since your old version stays on the board. To list those files, run this on the PC in the openwifi directory, with `OLD_REV` from step 2, and delete them on the board if you do not want them:
+!!! note "Files removed from the repo stay on the board"
+    The archive only adds and replaces files. A script that was deleted or renamed in the repo since your old version stays on the board. To list those files, run this on the PC in the openwifi directory, with `OLD_REV` from step 2, and delete them on the board if you do not want them:
 
     ```bash
     git diff --name-status --diff-filter=DR $OLD_REV HEAD -- user_space
@@ -751,8 +751,8 @@ The shared `openwifi_32_ad9361.dtso` inserts (as device-tree fragments):
     | `side_ch` | `0x83c50000` | `sdr,side_ch` | (DMA) |
     | `tx_dma` | `0x80400000` | `xlnx,axi-dma-1.00.a` | 35, 36 |
     | `rx_dma` | `0x80410000` | `xlnx,axi-dma-1.00.a` | 31, 32 |
-    | `cf-ad9361-lpc` | `0x79020000` | `adi,axi-ad9361` | none |
-    | `cf-ad9361-dds-core-lpc` | `0x79024000` | `adi,axi-ad9361-dds` | none |
+    | `cf-ad9361-lpc` | `0x79020000` | `adi,axi-ad9361-6.00.a` | none |
+    | `cf-ad9361-dds-core-lpc` | `0x79024000` | `adi,axi-ad9361-dds-6.00.a` | none |
 
     The `sdr` node ties the driver to the DMA engines (`dmas = <&rx_dma 1 &tx_dma 0>`) and interrupts. `side_ch` has its own DMA pair. An `i2c@41600000` bus (power monitor, ADC, EEPROM) is also declared.
 
