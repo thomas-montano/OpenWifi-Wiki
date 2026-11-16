@@ -530,6 +530,14 @@ def render_prompt(repo_result, context_path, dry_run=False):
             the reviewer knows how carefully to look. If you were unable to verify
             something, say which part is unverified rather than leaving it out.
             Do not merge the pull request. Leave it for a human.
+
+        Whatever you decide, your final message is published in the workflow
+        run summary on GitHub, where the maintainer reads it to see what this
+        run did. Make it a short Markdown report of no more than about 200
+        words. Name each upstream commit by short SHA and say in one line what
+        it changed. Then state your decision and the reason for it: either no
+        wiki change is needed, or which pages you edited and the pull request
+        URL. Do not repeat these instructions or narrate your process.
         %s
         """)
 

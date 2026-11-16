@@ -50,13 +50,13 @@ jobs:
     timeout-minutes: 45
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # Full history so the agent can run mkdocs build --strict with the
           # git-revision-date-localized plugin working properly.
           fetch-depth: 0
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.x"
 
@@ -65,9 +65,9 @@ jobs:
         # so the toolchain has to be present in the session.
         run: pip install -r requirements.txt
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "24"
 
       - name: Install Claude Code
         run: npm install -g @anthropic-ai/claude-code
@@ -126,13 +126,18 @@ jobs:
         run: |
           set -uo pipefail
           PLAN="${{ steps.collect.outputs.plan }}"
+          DRY_RUN=$(jq -r .dry_run "$PLAN")
           FAILED=0
           # Repos whose session did not complete successfully. Read by the next
           # step, which must not mark these repos as synced.
           : > "$RUNNER_TEMP/failed_repos.txt"
 
-          while read -r prompt_file repo; do
+          echo "## Agent decisions" >> "$GITHUB_STEP_SUMMARY"
+
+          while read -r prompt_file repo target_branch; do
             echo "::group::Sync session for $repo"
+            REPORT="$RUNNER_TEMP/sync/${repo##*/}-report.md"
+            SESSION_OK=1
 
             # Each session starts from a clean master so one session's branch
             # never leaks into the next. -f discards anything a previous session
@@ -142,15 +147,48 @@ jobs:
             git reset --hard HEAD
             git clean -fd
 
+            # stdin comes from /dev/null so the session cannot read the
+            # remaining lines of the plan that feed this loop. tee keeps the
+            # final message in the log and saves it for the run summary.
+            # pipefail makes a failed session still fail the pipeline.
             claude -p "$(cat "$prompt_file")" \
               --model claude-sonnet-5 \
               --max-turns 40 \
               --permission-mode acceptEdits \
               --allowedTools "Read,Write,Edit,Glob,Grep,TodoWrite,Bash(git:*),Bash(gh pr create:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(mkdocs:*),Bash(pip:*)" \
-              --output-format text || { echo "session for $repo failed"; echo "$repo" >> "$RUNNER_TEMP/failed_repos.txt"; FAILED=1; }
+              --output-format text < /dev/null | tee "$REPORT" || { echo "session for $repo failed"; echo "$repo" >> "$RUNNER_TEMP/failed_repos.txt"; FAILED=1; SESSION_OK=0; }
+
+            # The outcome line comes from GitHub, not from the agent's own
+            # account, so the summary stays accurate even if the report is not.
+            if [ "$SESSION_OK" = "0" ]; then
+              OUTCOME="Session failed. These commits stay pending and are retried on the next run."
+            elif [ "$DRY_RUN" = "true" ]; then
+              OUTCOME="Dry run. No branch or pull request was expected."
+            else
+              PR_URL=$(gh pr list --head "$target_branch" --state all --json url --jq '.[0].url // empty' 2>/dev/null || true)
+              if [ -n "$PR_URL" ]; then
+                OUTCOME="Pull request opened: $PR_URL"
+              else
+                OUTCOME="No pull request opened."
+              fi
+            fi
+
+            {
+              echo
+              echo "### $repo"
+              echo
+              echo "**Outcome:** $OUTCOME"
+              echo
+              if [ -s "$REPORT" ]; then
+                cat "$REPORT"
+              else
+                echo "_The session produced no final message._"
+              fi
+              echo
+            } >> "$GITHUB_STEP_SUMMARY"
 
             echo "::endgroup::"
-          done < <(jq -r '.runs[] | "\(.prompt_file) \(.repo)"' "$PLAN")
+          done < <(jq -r '.runs[] | "\(.prompt_file) \(.repo) \(.target_branch)"' "$PLAN")
 
           git checkout -f master
           git reset --hard HEAD
