@@ -21,6 +21,7 @@
 *[BSRP]: Buffer Status Report Poll: the 802.11ax trigger frame type (4) an AP sends to ask stations how much uplink data they hold.
 *[BRAM]: Block RAM: the FPGA's on-chip memory, which holds the TX buffer and capture FIFO.
 *[BSSID]: Basic Service Set Identifier: the MAC address identifying a Wi-Fi network (the AP in infrastructure mode).
+*[CAC]: Channel Availability Check: the listening period, usually 60 seconds, before an AP may use a DFS channel.
 *[CCA]: Clear Channel Assessment: the "is the channel busy?" check in CSMA/CA (configurable via sdrctl).
 *[Co-OFDMA]: Coordinated OFDMA: an openwifi research feature where multiple APs coordinate their OFDMA transmissions.
 *[CCDF]: Complementary Cumulative Distribution Function: the curve of how often a measured value exceeds each level, used by 802.11 conformance limits.
@@ -40,6 +41,7 @@
 *[DCF]: Distributed Coordination Function: the standard's CSMA/CA-based channel-access method.
 *[DCM]: Dual Carrier Modulation: an optional 802.11ax mode that duplicates data across subcarrier pairs for robustness.
 *[DCXO]: Digitally controlled crystal oscillator: the AD9361's tunable reference crystal.
+*[DFS]: Dynamic Frequency Selection: the 5 GHz rules that make a device check for radar and leave a channel where it detects one.
 *[DFU]: Device Firmware Upgrade: the USB protocol for writing firmware to a device, used to flash the PlutoSky R2.
 *[DHCP]: Dynamic Host Configuration Protocol: assigns IP addresses on a network.
 *[DNS]: Domain Name System: resolves host names to IP addresses.
@@ -72,6 +74,7 @@
 *[FSM]: Finite State Machine: sequential logic that steps through a fixed set of states (for example the side channel's capture FSM).
 *[GEM]: Gigabit Ethernet MAC: the Zynq PS-side Ethernet controller.
 *[GI]: Guard Interval: the cyclic-prefix gap between OFDM symbols that absorbs multipath.
+*[GO]: Group Owner: the AP role in a Wi-Fi Direct (P2P) group.
 *[GPIO]: General-Purpose Input/Output: software-controllable pins (board LEDs, RF-switch control).
 *[HLS]: High-Level Synthesis: generating FPGA logic from C++ (via Vitis HLS).
 *[hostapd]: The standard Linux daemon that turns a Wi-Fi interface into an access point.
@@ -103,17 +106,20 @@
 *[MAC]: Medium Access Control: split in openwifi between Linux (upper) and the FPGA xpu (low).
 *[MCS]: Modulation and Coding Scheme: an index selecting modulation + code rate (openwifi supports 0-7).
 *[MIMO]: Multiple-Input Multiple-Output: multiple spatial streams (not supported in the open-source release).
+*[MLME]: MAC Sublayer Management Entity: the 802.11 management functions (scanning, authentication, association), run by mac80211 for openwifi.
 *[MPDU]: MAC Protocol Data Unit: a single 802.11 MAC frame. Several MPDUs are packed together in an A-MPDU.
 *[MSPS]: Mega-samples per second.
 *[Msps]: Mega-samples per second.
 *[minstrel_ht]: The default Linux mac80211 rate-control algorithm.
 *[NAV]: Network Allocation Vector: the virtual carrier-sense timer set by RTS/CTS.
 *[nl80211]: The netlink interface between user space and cfg80211 (openwifi's sdrctl uses its testmode path).
+*[OCB]: Outside the Context of a BSS: the 802.11p-style interface mode that sends without joining a network.
 *[OFDM]: Orthogonal Frequency-Division Multiplexing: the modulation used by 802.11a/g/n.
 *[OFDMA]: Orthogonal Frequency-Division Multiple Access: the 802.11ax feature (not in the open-source release).
 *[openofdm]: The open-source 802.11 OFDM receiver openwifi's openofdm_rx core is based on.
 *[OpenWrt]: The router-focused embedded Linux distribution. openwifi ships as an OpenWrt kernel module.
 *[OTG]: USB On-The-Go: a USB port that can act as a device, used for networking and a console on some boards.
+*[P2P]: Wi-Fi Direct (peer to peer): a station or AP interface type used for direct device links.
 *[PA]: Power amplifier: the RF stage that boosts the transmit signal before the antenna.
 *[PER]: Packet Error Rate: the fraction of packets lost or received in error.
 *[PHY]: The physical layer: modulation, coding, and RF (openofdm cores plus the AD9361).
@@ -150,6 +156,7 @@
 *[TSF]: Timing Synchronization Function: the 802.11 64-bit hardware timer.
 *[TSN]: Time-Sensitive Networking: deterministic, scheduled networking.
 *[TWT]: Target Wake Time: the 802.11ax scheduled power-saving mechanism.
+*[TXOP]: Transmit Opportunity: a time period in which a station may send several frames without contending for the channel again.
 *[UART]: Universal Asynchronous Receiver/Transmitter: the serial console.
 *[U-Boot]: The bootloader that loads the Linux kernel on the board.
 *[UDP]: User Datagram Protocol: the connectionless IP transport (side-channel streaming, iperf tests).

@@ -4,7 +4,7 @@ description: 'The openwifi Linux driver: sdr.ko and its five per-core kernel mod
 
 # The Linux Driver
 
-The **openwifi Linux driver** lives in [`openwifi/driver/`](https://github.com/open-sdr/openwifi/tree/master/driver) and sits between Linux `mac80211` and the FPGA. This page covers its kernel modules, hardware discovery at boot, transmit and receive rings, and register definitions. For rebuilding and deploying the driver, see [Software Development Workflow](Software-Development-Workflow.md).
+The **openwifi Linux driver** lives in [`openwifi/driver/`](https://github.com/open-sdr/openwifi/tree/master/driver) and sits between Linux `mac80211` and the FPGA. This page covers its kernel modules, hardware discovery at boot, transmit and receive rings, and register definitions. For rebuilding and deploying the driver, see [Software Development Workflow](Software-Development-Workflow.md). For the rules a driver change must keep, see [The Driver Contract](Driver-Contract.md).
 
 ## One driver, six kernel modules
 
@@ -63,26 +63,7 @@ The driver also takes two module parameters worth knowing. `test_mode` uses bit 
 
 ## The mac80211 callback surface
 
-`mac80211` defines a set of callbacks (`ieee80211_ops`) that every SoftMAC driver implements. `sdr.c` implements the relevant subset in `openwifi_ops`, and each callback turns into FPGA register writes or DMA activity.
-
-| Callback | When Linux calls it |
-|---|---|
-| `tx` | There is a packet to transmit |
-| `start` / `stop` | The NIC is brought up or down (`ifconfig sdr0 up/down`) |
-| `add_interface` / `remove_interface` | A virtual interface is created or deleted |
-| `config` | Channel or frequency change, for example during a scan |
-| `bss_info_changed` | BSS parameters change (BSSID, TX power, beacon interval) |
-| `conf_tx` | TX parameters change (AIFS, CW_MIN, CW_MAX, TXOP) |
-| `configure_filter` | Frame-filtering rules change |
-| `prepare_multicast` | Multicast filter list is rebuilt |
-| `set_antenna` / `get_antenna` | Select or read the TX or RX antenna |
-| `get_tsf` / `set_tsf` / `reset_tsf` | Read, write, or reset the 64-bit TSF hardware timer |
-| `set_rts_threshold` | Change the packet length that triggers RTS/CTS |
-| `ampdu_action` | A-MPDU (aggregation) operations |
-| `rfkill_poll` | Poll the wireless kill switch |
-| `testmode_cmd` | Handles `sdrctl` commands, see below |
-
-Up to `MAX_NUM_VIF` (4) virtual interfaces are supported.
+`mac80211` defines a set of callbacks (`ieee80211_ops`) that every SoftMAC driver implements. `sdr.c` implements them in `openwifi_ops`. Most callbacks turn into FPGA register writes or DMA activity, and a few accept a request and do nothing. [The Driver Contract](Driver-Contract.md#callbacks) lists every callback, which ones Linux requires, and what openwifi does in each.
 
 ## The transmit path inside the driver
 

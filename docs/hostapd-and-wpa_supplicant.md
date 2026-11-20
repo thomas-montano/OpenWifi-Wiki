@@ -24,7 +24,7 @@ A daemon is busy for the first second or so of a connection and then goes quiet.
 
 ## How they reach openwifi
 
-They do not talk to openwifi, and they cannot. A daemon speaks the generic **nl80211** netlink interface to `cfg80211`, `cfg80211` drives `mac80211`, and `mac80211` calls the openwifi driver through the [`ieee80211_ops` callbacks](Driver-Architecture.md#the-mac80211-callback-surface). Only the last step touches openwifi-specific code.
+They do not talk to openwifi, and they cannot. A daemon speaks the generic **nl80211** netlink interface to `cfg80211`, `cfg80211` drives `mac80211`, and `mac80211` calls the openwifi driver through the [`ieee80211_ops` callbacks](Driver-Contract.md#callbacks). Only the last step touches openwifi-specific code.
 
 <figure class="ow-svgfig">
 <svg viewBox="0 0 760 470" width="760" height="470" role="img"
@@ -90,7 +90,7 @@ Four consequences follow from this.
 
 **hostapd does not transmit beacons.** It hands `mac80211` the beacon contents, and `mac80211` plus the driver put a beacon on the air on a timer. The [AP walkthrough](Operating-Modes.md#access-point) therefore checks the TX interrupt count in `/proc/interrupts` rather than hostapd output.
 
-**Encryption runs in software.** The driver implements no key-offload callback (there is no `set_key` in the [callback table](Driver-Architecture.md#the-mac80211-callback-surface)), so `mac80211` does CCMP on the ARM cores. WPA2 works normally, but it costs processor time, so an encrypted link doesn't reach the throughput of an open one. When you are measuring peak throughput, test with security disabled.
+**Encryption runs in software.** The driver implements no key-offload callback (there is no `set_key` in the [callback table](Driver-Contract.md#callbacks)), so `mac80211` does CCMP on the ARM cores. WPA2 works normally, but it costs processor time, so an encrypted link doesn't reach the throughput of an open one. When you are measuring peak throughput, test with security disabled.
 
 ## The configuration files openwifi ships
 

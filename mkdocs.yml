@@ -178,6 +178,7 @@ nav:
           - Software/index.md
           - Workflow: Software-Development-Workflow.md
           - The Linux Driver: Driver-Architecture.md
+          - The Driver Contract: Driver-Contract.md
       - FPGA:
           - FPGA/index.md
           - Development: FPGA-Development.md

@@ -11,5 +11,6 @@ openwifi's software lives in the [openwifi](https://github.com/open-sdr/openwifi
 | Rebuild the driver or `sdrctl`, deploy them without rebooting, or build SD images | [Software Development Workflow](../Software-Development-Workflow.md) |
 | Understand the kernel modules, the `mac80211` callbacks, and the transmit and receive paths | [The Linux Driver](../Driver-Architecture.md) |
 | Chase a load-order problem or a packet that does not arrive | [The Linux Driver](../Driver-Architecture.md) |
+| Change the driver without breaking what Linux, `sdrctl`, and the FPGA expect from it | [The Driver Contract](../Driver-Contract.md) |
 
 Set up the shared host toolchain on the [Environment Setup](../Development-Environment-Setup.md) page first. For the FPGA half of the stack see [FPGA](../FPGA/index.md), and for how Linux, the driver, and the FPGA fit together see [Architecture](../Architecture.md).
